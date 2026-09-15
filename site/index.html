@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clima de Brasília — hoje e no passado</title>
+<meta name="description" content="Compare a temperatura de hoje em Brasília com o mesmo dia há 1, 5, 10 e 20 anos, com dados do INMET desde 2000.">
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<header class="topo">
+  <p class="olho">Estação A001 · Brasília · série desde 2000</p>
+  <h1>O mesmo dia, outros anos</h1>
+  <p class="subtitulo" id="subtitulo">Carregando…</p>
+</header>
+
+<main>
+
+  <section class="bloco" aria-labelledby="t-hoje">
+    <h2 id="t-hoje" class="rotulo">Hoje</h2>
+    <div id="cartao-hoje" class="cartao cartao-hoje">
+      <p class="carregando">Buscando a temperatura de hoje…</p>
+    </div>
+  </section>
+
+  <section class="bloco" aria-labelledby="t-antes">
+    <h2 id="t-antes" class="rotulo">No mesmo dia, anos atrás</h2>
+    <div id="cartoes-passado" class="grade">
+      <p class="carregando">Buscando a série histórica…</p>
+    </div>
+    <p class="nota" id="nota-aproximacao" hidden></p>
+  </section>
+
+  <section class="bloco" aria-labelledby="t-serie">
+    <h2 id="t-serie" class="rotulo">A máxima deste dia, ano a ano</h2>
+    <p class="explica">Cada barra é a temperatura máxima registrada neste mesmo dia do ano, desde 2000. Hoje está destacado.</p>
+    <div id="grafico-serie" class="grafico"></div>
+  </section>
+
+  <section class="bloco destaque" aria-labelledby="t-tendencia">
+    <h2 id="t-tendencia" class="rotulo">O que mudou em 25 anos</h2>
+    <div id="tendencias" class="tendencias">
+      <p class="carregando">Calculando…</p>
+    </div>
+
+    <h3 class="sub">Dias acima de 30 °C por ano</h3>
+    <p class="explica">Este é o número mais direto da série: não é uma média em décimos de grau, é a contagem de dias de calor.</p>
+    <div id="grafico-quentes" class="grafico"></div>
+
+    <h3 class="sub">Umidade média do ar por ano</h3>
+    <p class="explica">Em Brasília a seca é sentida antes do calor. A linha mostra se o ar está ficando mais seco.</p>
+    <div id="grafico-umidade" class="grafico"></div>
+
+    <div class="leitura" id="leitura-honesta"></div>
+  </section>
+
+</main>
+
+<footer>
+  <p>Fonte: INMET (estação A001) via Portal Brasileiro de Dados Abertos · Open-Meteo</p>
+  <p class="miudo">Dias sem leitura da A001 são preenchidos pela Open-Meteo e aparecem marcados. Um dia sem dado na série usa o dia válido mais próximo, até 3 dias de distância.</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
