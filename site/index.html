@@ -34,20 +34,22 @@
     <p class="geracao-resposta" id="geracao-resposta" hidden></p>
   </section>
 
-  <section class="bloco" aria-labelledby="t-hoje">
-    <h2 id="t-hoje" class="rotulo">Hoje</h2>
-    <div id="cartao-hoje" class="cartao cartao-hoje">
-      <p class="carregando">Buscando a temperatura de hoje…</p>
-    </div>
-  </section>
+  <div class="bloco comparativo-lado-a-lado">
+    <section aria-labelledby="t-hoje">
+      <h2 id="t-hoje" class="rotulo">Hoje</h2>
+      <div id="cartao-hoje" class="cartao cartao-hoje">
+        <p class="carregando">Buscando a temperatura de hoje…</p>
+      </div>
+    </section>
 
-  <section class="bloco" aria-labelledby="t-antes">
-    <h2 id="t-antes" class="rotulo">No mesmo dia, anos atrás</h2>
-    <div id="cartoes-passado" class="grade">
-      <p class="carregando">Buscando a série histórica…</p>
-    </div>
-    <p class="nota" id="nota-aproximacao" hidden></p>
-  </section>
+    <section aria-labelledby="t-antes">
+      <h2 id="t-antes" class="rotulo">No mesmo dia, anos atrás</h2>
+      <div id="cartoes-passado" class="grade">
+        <p class="carregando">Buscando a série histórica…</p>
+      </div>
+      <p class="nota" id="nota-aproximacao" hidden></p>
+    </section>
+  </div>
 
   <section class="bloco" aria-labelledby="t-serie">
     <h2 id="t-serie" class="rotulo">A máxima deste dia, ano a ano</h2>

@@ -47,7 +47,8 @@
 
 body {
   margin: 0;
-  padding: 0 1.1rem 3rem;
+  /* respiro lateral que cresce com a tela, em vez de margem fixa */
+  padding: 0 clamp(1.1rem, 4.5vw, 4rem) 4rem;
   color: var(--tinta);
   /* mesmo fundo vivo da feira, mais discreto porque aqui se lê texto longo */
   background: var(--papel);
@@ -60,7 +61,13 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
-main, header, footer { max-width: 44rem; margin: 0 auto; }
+/* Largura total com respiro. O contêiner e largo, mas a PROSA continua
+   presa a uma medida legivel (~68 caracteres): linha longa demais cansa e
+   faz o olho perder a volta. Cartoes e graficos aproveitam a largura toda. */
+main, header, footer { max-width: 1400px; margin: 0 auto; }
+
+.subtitulo, .explica, .nota, .leitura p, .miudo,
+.geracao-resposta, .seculo > .explica { max-width: 68ch; }
 
 /* ---------- topo ---------- */
 
@@ -76,7 +83,7 @@ main, header, footer { max-width: 44rem; margin: 0 auto; }
 
 h1 {
   margin: 0;
-  font-size: 1.9rem;
+  font-size: clamp(1.9rem, 4.2vw, 3rem);
   line-height: 1.15;
   letter-spacing: -.02em;
 }
@@ -97,7 +104,8 @@ h1 {
 
 .manchete-frase {
   margin: 0;
-  font-size: 1.32rem;
+  max-width: 30ch;
+  font-size: clamp(1.32rem, 2.6vw, 2rem);
   line-height: 1.28;
   font-weight: 600;
   letter-spacing: -.015em;
@@ -107,6 +115,7 @@ h1 {
 
 .manchete-fonte {
   margin: .55rem 0 0;
+  max-width: 60ch;
   font-size: .78rem;
   opacity: .85;
 }
@@ -114,6 +123,7 @@ h1 {
 /* ---------- geracao (o aluno produz antes de ler) ---------- */
 
 .geracao {
+  max-width: 52rem;
   background: var(--papel-cartao);
   border: 1px solid var(--linha);
   border-radius: var(--raio);
@@ -170,6 +180,20 @@ h1 {
 
 /* ---------- blocos ---------- */
 
+/* Em tela larga o cartao de hoje e os quatro anos ficam lado a lado: a
+   comparacao que da nome ao site passa a caber num olhar so, em vez de
+   exigir rolagem entre o "hoje" e o "antes". */
+@media (min-width: 60rem) {
+  .comparativo-lado-a-lado {
+    display: grid;
+    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+    gap: clamp(1.2rem, 2.5vw, 2.4rem);
+    align-items: start;
+  }
+  .comparativo-lado-a-lado > * { margin: 0; }
+  .comparativo-lado-a-lado .cartao-hoje { position: sticky; top: 1.5rem; }
+}
+
 .bloco { margin: 2.4rem 0; }
 
 .rotulo {
@@ -220,8 +244,10 @@ h1 {
 
 .grade {
   display: grid;
-  gap: .8rem;
-  grid-template-columns: 1fr 1fr;
+  gap: clamp(.8rem, 1.4vw, 1.3rem);
+  /* 185px cabe os quatro anos numa linha so na coluna da direita; com 230px
+     quebrava em 3 + 1, e um cartao sozinho embaixo parece erro de layout */
+  grid-template-columns: repeat(auto-fit, minmax(min(185px, 100%), 1fr));
 }
 
 @media (max-width: 27rem) { .grade { grid-template-columns: 1fr; } }
@@ -281,7 +307,12 @@ h1 {
 
 /* ---------- tendencias ---------- */
 
-.tendencias { display: grid; gap: .7rem; grid-template-columns: 1fr 1fr; margin-bottom: .6rem; }
+.tendencias {
+  display: grid;
+  gap: clamp(.7rem, 1.3vw, 1.2rem);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin-bottom: .6rem;
+}
 @media (max-width: 27rem) { .tendencias { grid-template-columns: 1fr; } }
 
 .tend {
