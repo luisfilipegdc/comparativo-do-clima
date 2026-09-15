@@ -281,6 +281,46 @@ h1 {
 .leitura p { margin: 0 0 .8rem; }
 .leitura strong { font-weight: 600; }
 
+/* ---------- faixa do seculo (ERA5) ---------- */
+
+.seculo {
+  background: var(--papel-cartao);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  padding: 1.4rem 1.2rem 1.6rem;
+}
+
+.seculo-numero {
+  margin: 1.2rem 0 .4rem;
+  font-size: 1.25rem;
+  line-height: 1.32;
+  font-weight: 600;
+  letter-spacing: -.015em;
+}
+.seculo-numero strong { color: var(--quente); }
+
+/* a serie longa e uma linha, nao barras: o ERA5 e continuo e suave */
+.g-linha-seculo { fill: none; stroke: var(--frio); stroke-width: 1.6; }
+.g-area-seculo  { fill: var(--frio); opacity: .12; }
+
+.comparacao {
+  margin: 1.4rem 0 0;
+  border: 1px solid var(--linha);
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: .9rem;
+}
+.comparacao div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .6rem .8rem;
+}
+.comparacao div + div { border-top: 1px solid var(--linha); }
+.comparacao .rotulo-linha { color: var(--tinta-fraca); }
+.comparacao b { font-variant-numeric: tabular-nums; }
+.comparacao .cidade b { color: var(--quente); }
+
 /* ---------- rodape e avisos ---------- */
 
 .nota {

@@ -72,10 +72,27 @@
     <div class="leitura" id="leitura-honesta"></div>
   </section>
 
+  <section class="bloco seculo" id="seculo" aria-labelledby="t-seculo" hidden>
+    <h2 id="t-seculo" class="rotulo">Quase um século</h2>
+    <p class="explica">
+      A estação de Brasília só existe desde 2000. Para enxergar mais longe,
+      esta faixa usa outra fonte: o <strong>ERA5</strong>, uma reconstrução do
+      clima feita por supercomputador a partir de milhares de medições, que
+      cobre este mesmo ponto do mapa <strong>desde 1940</strong>.
+    </p>
+
+    <p class="seculo-numero" id="seculo-numero"></p>
+
+    <h3 class="sub">Temperatura máxima média do ano, desde 1940</h3>
+    <div id="grafico-seculo" class="grafico"></div>
+
+    <div class="leitura" id="seculo-leitura"></div>
+  </section>
+
 </main>
 
 <footer>
-  <p>Fonte: INMET (estação A001) via Portal Brasileiro de Dados Abertos · Open-Meteo</p>
+  <p>Fontes: INMET (estação A001) via Portal Brasileiro de Dados Abertos · Open-Meteo · ERA5/Copernicus via Open-Meteo Archive</p>
   <p class="miudo">Dias sem leitura da A001 são preenchidos pela Open-Meteo e aparecem marcados. Um dia sem dado na série usa o dia válido mais próximo, até 3 dias de distância.</p>
 </footer>
 

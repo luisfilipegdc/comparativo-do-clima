@@ -7,6 +7,7 @@ const CONFIG = {
   // A serie historica muda uma vez por ano: e um arquivo, nao uma consulta.
   // Publicado junto com o site, cai no CDN e chega em uma requisicao so.
   serie: "dados/serie.json",
+  era5: "dados/era5.json",     // contexto longo: 1940 em diante
   lat: -15.78,
   lon: -47.93,
   fuso: "America/Sao_Paulo",
@@ -475,6 +476,108 @@ function leituraHonesta(resumo) {
     1,3 °C desde o século XIX.</p>`;
 }
 
+/* ------------------------------------------------- quase um seculo (ERA5) */
+
+/** Linha da maxima anual desde 1940, com media movel e reta de tendencia. */
+function graficoSeculo(anos) {
+  const largura = Math.max(320, anos.length * 4.2), alturaUtil = 130;
+  const margemEsq = 30, margemBaixo = 24, altura = alturaUtil + margemBaixo + 14;
+
+  const valores = anos.map((a) => a.temp_max_media);
+  const minimo = Math.floor(Math.min(...valores) * 2) / 2 - 0.3;
+  const maximo = Math.ceil(Math.max(...valores) * 2) / 2 + 0.3;
+  const x = (i) => margemEsq + (i / (anos.length - 1)) * (largura - margemEsq - 6);
+  const y = (v) => alturaUtil - ((v - minimo) / (maximo - minimo)) * alturaUtil + 10;
+
+  const pontos = anos.map((a, i) => `${x(i).toFixed(1)},${y(a.temp_max_media).toFixed(1)}`);
+  const linha = `<polyline class="g-linha-seculo" points="${pontos.join(" ")}"></polyline>`;
+  const area = `<polygon class="g-area-seculo" points="${x(0)},${y(minimo)} ${pontos.join(" ")} ${x(anos.length - 1)},${y(minimo)}"></polygon>`;
+
+  // reta de tendencia sobre a serie inteira
+  const xs = anos.map((_, i) => i);
+  const mx = xs.reduce((a, b) => a + b, 0) / xs.length;
+  const my = valores.reduce((a, b) => a + b, 0) / valores.length;
+  const inclin = xs.reduce((s, v, i) => s + (v - mx) * (valores[i] - my), 0)
+    / xs.reduce((s, v) => s + (v - mx) ** 2, 0);
+  const tend = `<line class="g-tendencia" x1="${x(0)}" y1="${y(my + inclin * (0 - mx))}"
+     x2="${x(anos.length - 1)}" y2="${y(my + inclin * (anos.length - 1 - mx))}"></line>`;
+
+  const grade = [minimo, (minimo + maximo) / 2, maximo].map((v) =>
+    `<line class="g-eixo" x1="${margemEsq}" y1="${y(v)}" x2="${largura}" y2="${y(v)}"></line>
+     <text class="g-rotulo" x="0" y="${y(v) + 3}">${br(v, 1)}°</text>`).join("");
+
+  const marcos = anos.map((a, i) => (a.ano % 20 === 0
+    ? `<text class="g-rotulo" x="${x(i)}" y="${alturaUtil + 24}" text-anchor="middle">${a.ano}</text>`
+    : "")).join("");
+
+  return `<svg viewBox="0 0 ${largura} ${altura}" role="img"
+     aria-label="Temperatura máxima média de cada ano em Brasília, de ${anos[0].ano} a ${anos[anos.length - 1].ano}">
+     ${grade}${area}${linha}${tend}${marcos}</svg>`;
+}
+
+/** A faixa longa: contexto de 1940 e a diferenca entre a cidade e a regiao. */
+function montarSeculo(era5, resumoInmet) {
+  const anos = (era5?.resumo || []).filter((a) => a.dias >= 350);
+  if (anos.length < 30) return;
+
+  const n = 30;
+  const med = (lista) => lista.reduce((s, a) => s + a.temp_max_media, 0) / lista.length;
+  const antes = anos.slice(0, n), depois = anos.slice(-10);
+  const salto = med(depois) - med(antes);
+
+  $("#seculo-numero").innerHTML =
+    `No ponto de Brasília, a máxima média subiu <strong>${comSinal(salto, 1)} °C</strong>
+     entre ${antes[0].ano}–${antes[n - 1].ano} e ${depois[0].ano}–${depois[depois.length - 1].ano}.`;
+
+  $("#grafico-seculo").innerHTML = graficoSeculo(anos);
+
+  // A comparacao que da a aula. Os dois lados PRECISAM cobrir os mesmos anos:
+  // medir a cidade em 25 anos contra a regiao em 86 exagera a diferenca,
+  // porque a serie longa dilui a aceleracao recente.
+  const inmetCompletos = resumoInmet.filter((d) => d.dias >= 300);
+  const de = inmetCompletos[0].ano, ate = inmetCompletos[inmetCompletos.length - 1].ano;
+
+  const regiaoMesmoPeriodo = anos
+    .filter((a) => a.ano >= de && a.ano <= ate)
+    .map((a) => ({ ...a, dias: 365 }));
+
+  const tendRegiao = tendenciaPorDecada(regiaoMesmoPeriodo, "temp_max_media");
+  const tendCidade = tendenciaPorDecada(resumoInmet, "temp_max_media");
+  const vezes = tendRegiao > 0.01 ? tendCidade / tendRegiao : null;
+
+  const comparacao = `
+    <div class="comparacao">
+      <div class="cidade">
+        <span class="rotulo-linha">Estação na cidade</span>
+        <b>${comSinal(tendCidade, 2)} °C/década</b>
+      </div>
+      <div>
+        <span class="rotulo-linha">Região no entorno</span>
+        <b>${comSinal(tendRegiao, 2)} °C/década</b>
+      </div>
+      <div>
+        <span class="rotulo-linha">Período comparado</span>
+        <b>${de}–${ate}</b>
+      </div>
+    </div>`;
+
+  const quantas = vezes && vezes > 1.5
+    ? `<p>O termômetro da cidade aquece <strong>${br(vezes, 1)} vezes mais rápido</strong>
+       que a região em volta. A diferença não é erro: é <strong>Brasília crescendo em cima do
+       termômetro</strong> — asfalto, concreto e menos vegetação seguram calor. O aquecimento
+       global entra nas duas linhas; a cidade soma o dela por cima.</p>`
+    : "";
+
+  $("#seculo-leitura").innerHTML = comparacao + quantas + `
+    <p class="miudo">O ERA5 é um modelo numa grade de ~30 km, não um termômetro no Plano
+    Piloto. Nos ${br(era5.comparacao_inmet?.dias || 0, 0)} dias em que as duas fontes coexistem,
+    ele marca a máxima ${br(Math.abs(era5.comparacao_inmet?.vies_temp_max || 0), 2)} °C mais baixa
+    que a estação. Por isso as duas séries nunca se misturam dia a dia — cada número desta
+    página diz de qual delas veio.</p>`;
+
+  $("#seculo").hidden = false;
+}
+
 /* -------------------------------------------------------------------- selos */
 
 function selosDeRecorde(hoje, serieDoDia) {
@@ -549,6 +652,14 @@ async function main() {
   $("#grafico-umidade").innerHTML =
     graficoAnual(resumo, "umidade_media", "Umidade média do ar por ano", null);
   $("#leitura-honesta").innerHTML = leituraHonesta(resumo);
+
+  // a faixa longa e complementar: se ela falhar, o resto da pagina segue de pe
+  try {
+    const resposta = await fetch(CONFIG.era5);
+    if (resposta.ok) montarSeculo(await resposta.json(), resumo);
+  } catch (erro) {
+    console.warn("faixa ERA5 indisponível:", erro.message);
+  }
 }
 
 main();

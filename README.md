@@ -14,6 +14,7 @@ externa. Os gráficos são SVG gerado à mão.
 | Série histórica (2000 → hoje) | INMET, estação automática **A001** (Brasília) |
 | Dia de hoje | Open-Meteo (o INMET publica o ano corrente com semanas de atraso) |
 | Dias sem leitura da A001 | Open-Meteo Archive, marcados como *dado de reserva* na tela |
+| Contexto longo (1940 →) | ERA5/Copernicus via Open-Meteo Archive — camada separada, nunca misturada dia a dia |
 
 ## O que a série mostra (2001–2025)
 
@@ -28,6 +29,13 @@ externa. Os gráficos são SVG gerado à mão.
 Os dias acima de 30 °C **dobraram**: de 29 por ano nos anos 2000 para 57 por
 ano na última década.
 
+No mesmo período (2001–2025), o ERA5 mede **+0,27 °C/década** para a região no
+entorno, contra **+0,52** da estação dentro da cidade: o termômetro urbano
+aquece ~1,9× mais rápido. Os dois lados usam sempre os **mesmos anos** — medir
+a cidade em 25 anos contra a região em 86 exageraria a diferença. Olhando bem
+mais para trás, a máxima do ponto de Brasília subiu **+1,0 °C** de 1940–1969
+para 2016–2025.
+
 Dia mais quente, noite parecida e ar mais seco é a assinatura de um clima que
 aquece *e* resseca — aqui se somam o aquecimento global e a mudança no uso do
 solo do Cerrado. Uma estação sozinha não prova o efeito estufa; ela mostra como
@@ -38,6 +46,7 @@ ele chega até Brasília. O site diz isso com essas palavras, de propósito.
 ```
 importar_inmet.py     baixa os ZIPs do INMET, agrega por dia, gera o CSV
 gerar_json.py         transforma o CSV em site/dados/serie.json (o que o site lê)
+gerar_era5.py         baixa o ERA5 (1940 →) e gera site/dados/era5.json
 carregar_supabase.py  opcional: sobe o CSV para o Supabase, se quiser uma API
 supabase/migrations/  o schema, em ordem
 site/                 o site estático (é o que a Vercel publica)
@@ -82,7 +91,7 @@ O INMET republica o ano corrente periodicamente. Para atualizar:
 
 ```bash
 rm dados/2026.zip
-python importar_inmet.py 2000 2026 && python gerar_json.py
+python importar_inmet.py 2000 2026 && python gerar_json.py && python gerar_era5.py
 ```
 
 Depois é só commitar o `site/dados/serie.json` — a Vercel republica sozinha.
