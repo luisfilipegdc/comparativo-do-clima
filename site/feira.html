@@ -68,27 +68,34 @@
   </section>
 
   <!-- 4 -------------------------------------------------- o jogo -->
-  <section class="tela tela-jogo" data-aluno="4" data-titulo="O jogo do chute">
-    <p class="etiqueta">Passo 3 · Chute antes de ver</p>
-    <h2 class="grande">Quantos dias por ano passam<br>de <span class="realce">30 °C</span> em Brasília?</h2>
+  <section class="tela tela-jogo" id="tela-jogo" data-aluno="4" data-titulo="O jogo do chute">
+    <div class="lado-texto">
+      <p class="etiqueta">Passo 3 · Chute antes de ver</p>
+      <h2 class="grande jogo-titulo">Quantos dias por ano passam de
+        <span class="realce">30 °C</span> em Brasília?</h2>
 
-    <div class="jogo" id="jogo-pergunta">
-      <p class="jogo-instrucao">Nos anos 2000 eram <b id="jogo-antes">29</b> dias.
-        E hoje? Arrisque:</p>
-      <div class="jogo-campo">
-        <input type="number" id="jogo-palpite" inputmode="numeric" min="0" max="365" placeholder="?">
-        <span class="jogo-unidade">dias</span>
-        <button type="button" id="jogo-botao">Ver a resposta</button>
+      <div class="jogo" id="jogo-pergunta">
+        <p class="jogo-instrucao">Nos anos 2000 eram <b id="jogo-antes">29</b> dias por ano.
+          E hoje, quanto você acha?</p>
+        <div class="jogo-campo">
+          <input type="number" id="jogo-palpite" inputmode="numeric" min="0" max="365" placeholder="?">
+          <span class="jogo-unidade">dias</span>
+          <button type="button" id="jogo-botao">Ver a resposta</button>
+        </div>
+      </div>
+
+      <div class="jogo-resposta" id="jogo-resposta" hidden>
+        <p class="jogo-veredito" id="jogo-veredito"></p>
+        <p class="jogo-numero">
+          <span class="jogo-de"><b id="jogo-antes2">29</b><em>nos anos 2000</em></span>
+          <span class="seta" aria-hidden="true">→</span>
+          <span class="jogo-para"><b class="realce" id="jogo-depois">57</b><em>hoje</em></span>
+        </p>
+        <p class="jogo-traducao">De <b>1 mês</b> de calor por ano para <b>2 meses</b>.</p>
       </div>
     </div>
 
-    <div class="jogo-resposta" id="jogo-resposta" hidden>
-      <p class="jogo-veredito" id="jogo-veredito"></p>
-      <p class="jogo-numero"><b id="jogo-antes2">29</b> <span class="seta">→</span>
-        <b class="realce" id="jogo-depois">57</b> <span class="jogo-unidade-grande">dias por ano</span></p>
-      <p class="jogo-traducao">De <b>1 mês</b> de calor por ano para <b>2 meses</b>.</p>
-      <div id="jogo-grafico" class="grafico-feira"></div>
-    </div>
+    <div class="lado-visual" id="jogo-grafico"></div>
   </section>
 
   <!-- 5 -------------------------------------------------- cidade x regiao -->

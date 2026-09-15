@@ -86,12 +86,33 @@ body {
 
 .tela.ativa { display: grid; }
 
-/* uma coluna: heroi e o jogo, onde o texto e o protagonista */
-.tela.heroi, .tela.tela-jogo {
+/* uma coluna: heroi, onde o texto e o protagonista */
+.tela.heroi {
   grid-template-columns: minmax(0, 1fr);
   justify-items: start;
+  align-content: center;
 }
-.tela.heroi { align-content: center; }
+
+/* O jogo tem dois momentos. ANTES do chute so existe a pergunta: uma coluna
+   centrada, grande, sem nada competindo. DEPOIS, vira duas colunas para as
+   grades - que sao o melhor do slide - ganharem a metade direita inteira. */
+.tela.tela-jogo {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  align-items: center;
+  justify-items: center;
+}
+.tela.tela-jogo .lado-texto { align-items: center; text-align: center; max-width: 24ch; }
+.tela.tela-jogo .jogo-titulo { max-width: none; }
+.tela.tela-jogo .lado-visual { display: none; }
+
+.tela.tela-jogo.revelado {
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  justify-items: stretch;
+}
+.tela.tela-jogo.revelado .lado-texto { align-items: flex-start; text-align: left; max-width: none; }
+.tela.tela-jogo.revelado .jogo-campo { justify-content: flex-start; }
+.tela.tela-jogo.revelado .lado-visual { display: grid; align-content: center; gap: clamp(.5rem, 1.6vh, 1rem); }
 
 /* duas colunas: texto a esquerda, visual a direita */
 /* linha 1 ocupa a sobra (1fr) e o rodape fica embaixo: e isso que faz o
@@ -337,12 +358,13 @@ body {
 
 .tela-jogo { justify-content: center; }
 
-.jogo-instrucao { margin: 0; font-size: clamp(1rem, 2.6vh, 1.6rem); }
+.jogo-instrucao { margin: 0; font-size: clamp(1.05rem, 3vh, 1.9rem); max-width: 22ch; }
 .jogo-instrucao b { color: var(--frio); }
 
 .jogo-campo {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: .7rem;
   flex-wrap: wrap;
   margin-top: clamp(.6rem, 2vh, 1.2rem);
@@ -403,8 +425,30 @@ body {
   60%  { transform: scale(1.18); opacity: 1; }
   100% { transform: scale(1); }
 }
-.jogo-numero .seta { color: var(--tinta-fraca); margin: 0 .2em; }
-.jogo-unidade-grande { font-size: clamp(.9rem, 2.2vh, 1.4rem); font-weight: 400; color: var(--tinta-fraca); }
+.jogo-numero {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(.5rem, 1.8vw, 1.4rem);
+  flex-wrap: wrap;
+}
+.jogo-numero .jogo-de, .jogo-numero .jogo-para { display: inline-flex; flex-direction: column; }
+.jogo-numero .jogo-de b, .jogo-numero .jogo-para b { line-height: .95; }
+.jogo-numero em {
+  font-size: clamp(.72rem, 1.6vh, 1rem);
+  font-weight: 600;
+  font-style: normal;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--tinta-fraca);
+  margin-top: .35em;
+}
+.jogo-numero .jogo-de b { color: var(--tinta-fraca); }
+.jogo-numero .seta {
+  color: var(--tinta-fraca);
+  font-size: .5em;
+  align-self: center;
+  transform: translateY(-.35em);
+}
 
 .jogo-traducao { margin: .3rem 0 0; font-size: clamp(1rem, 2.6vh, 1.6rem); }
 
@@ -416,10 +460,10 @@ body {
 
 /* ---------- o ano em quadradinhos ---------- */
 
-.grade-ano { margin: 0 0 clamp(.4rem, 1.4vh, .9rem); }
-.grade-ano svg { display: block; width: 100%; height: auto; max-height: 18vh; }
+.grade-ano { margin: 0; }
+.grade-ano svg { display: block; width: 100%; height: auto; max-height: 26vh; }
 
-.gr-titulo { fill: var(--tinta-fraca); font-size: 13px; font-weight: 600; font-family: system-ui, sans-serif; }
+.gr-titulo { fill: var(--tinta-fraca); font-size: 15px; font-weight: 700; font-family: system-ui, sans-serif; }
 .gr-destaque { fill: var(--quente); font-weight: 700; }
 
 /* cada dia entra sozinho: o olho acompanha o vermelho aparecendo */
@@ -440,10 +484,15 @@ body {
 }
 
 .grade-legenda {
-  margin: .2rem 0 0;
-  font-size: clamp(.75rem, 1.6vh, 1rem);
+  margin: .3rem 0 0;
+  font-size: clamp(.78rem, 1.7vh, 1.05rem);
   color: var(--tinta-fraca);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .35rem 1.1rem;
 }
+.grade-legenda em { margin-left: auto; }
 .grade-legenda .amostra {
   display: inline-block; width: .8em; height: .8em; border-radius: 2px;
   vertical-align: -.05em; margin-right: .25em;

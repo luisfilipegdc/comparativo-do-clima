@@ -174,7 +174,10 @@ function gradeAno(dias, ano, rotulo) {
   const doAno = dias.filter((d) => d.data.startsWith(String(ano)));
   if (!doAno.length) return "";
 
-  const lado = 13, vao = 2.4, linhas = 7;
+  // 10 linhas em vez de 7: a faixa de 53 colunas ficava comprida e baixa
+  // demais, e sobrava altura na coluna. Mais quadrado, o bloco cresce e o
+  // vermelho fica maior na tela da TV.
+  const lado = 13, vao = 2.4, linhas = 10;
   const colunas = Math.ceil(doAno.length / linhas);
   const largura = colunas * (lado + vao);
   const altura = linhas * (lado + vao) + 26;
@@ -270,6 +273,9 @@ function tela4(dados) {
 
     $("#jogo-pergunta").hidden = true;
     $("#jogo-resposta").hidden = false;
+    // vira o slide de uma coluna centrada para duas: as grades ganham a
+    // metade direita, que antes da revelacao nao tinha o que mostrar
+    $("#tela-jogo").classList.add("revelado");
     contarAte($("#jogo-depois"), depois);
   }
 
