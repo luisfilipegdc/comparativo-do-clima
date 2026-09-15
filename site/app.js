@@ -386,6 +386,39 @@ function montarManchete(resumo) {
   return true;
 }
 
+/** Os dias de calor de cada ano de vida da crianca, rotulados pela IDADE.
+    "Quando voce tinha 3 anos" diz mais a um aluno de 10 que "2019". */
+function graficoIdade(resumo, anoNascimento) {
+  const anos = resumo.filter((d) => d.dias >= 300 && d.ano >= anoNascimento);
+  if (anos.length < 3) return "";
+
+  const larguraBarra = 22, espaco = 8, alturaUtil = 120, margemBaixo = 34, margemEsq = 26;
+  const largura = margemEsq + anos.length * (larguraBarra + espaco) + 8;
+  const altura = alturaUtil + margemBaixo + 12;
+
+  const valores = anos.map((a) => a.dias_acima_30);
+  const maximo = Math.ceil(Math.max(...valores) * 1.08);
+  const escala = (v) => alturaUtil - (v / maximo) * alturaUtil + 10;
+
+  const barras = anos.map((a, i) => {
+    const idade = a.ano - anoNascimento;
+    const x = margemEsq + i * (larguraBarra + espaco);
+    const y = escala(a.dias_acima_30);
+    const classe = a.dias_acima_30 >= maximo * 0.8 ? "g-barra-quente" : "g-barra";
+    return `<rect class="${classe}" x="${x}" y="${y}" width="${larguraBarra}"
+        height="${alturaUtil + 10 - y}" rx="3"><title>${a.ano}: ${a.dias_acima_30} dias</title></rect>
+      <text class="g-rotulo g-numero" x="${x + larguraBarra / 2}" y="${y - 4}" text-anchor="middle">${a.dias_acima_30}</text>
+      <text class="g-rotulo" x="${x + larguraBarra / 2}" y="${alturaUtil + 26}" text-anchor="middle">${idade === 0 ? "nasceu" : idade}</text>`;
+  }).join("");
+
+  return `<div class="grafico grafico-idade">
+    <svg viewBox="0 0 ${largura} ${altura}" role="img"
+      aria-label="Dias acima de 30 graus em cada ano de vida, de ${anos[0].ano} a ${anos[anos.length - 1].ano}">
+      ${barras}
+      <text class="g-rotulo g-eixo-nome" x="${margemEsq}" y="${altura - 2}">sua idade em cada ano →</text>
+    </svg></div>`;
+}
+
 /** Media movel de janelaMedia anos em torno de um ano - um ano so e ruidoso. */
 function mediaEmTorno(resumo, ano, campo) {
   const metade = Math.floor(CONFIG.janelaMedia / 2);
@@ -431,13 +464,25 @@ function ligarGeracao(resumo) {
     const metade = Math.floor(CONFIG.janelaMedia / 2);
     const de = Math.round(entao), para = Math.round(agora);
     const dif = para - de;
-    const verbo = dif >= 0 ? "ganhou" : "perdeu";
-    resposta.innerHTML = `Desde ${ano}, Brasília ${verbo}
-      <strong>${Math.abs(dif)} dias de calor por ano</strong>.
-      Por volta de ${ano} eram ${de} dias acima de 30 °C por ano; agora são ${para}.
-      <span class="miudo">Comparação entre ${ano - metade}–${ano + metade} e
-      ${recentes[0].ano}–${recentes[recentes.length - 1].ano}, para um ano atípico
-      não distorcer a conta.</span>`;
+    // a idade conta do ano corrente, nao do ultimo ano com dado fechado:
+    // quem nasceu em 2016 tem 10 anos em 2026, ainda que a serie pare em 2025
+    const idade = Number(hojeLocal().slice(0, 4)) - ano;
+
+    // texto curto e sem jargao: quem le tem 10 anos
+    const frase = dif > 0
+      ? `Você tem cerca de <strong>${idade} anos</strong>. Quando você nasceu, Brasília
+         tinha <strong>${de} dias de calor</strong> por ano. Hoje tem <strong>${para}</strong>.
+         São <strong>${dif} dias a mais</strong> — quase ${Math.max(1, Math.round(dif / 7))}
+         semana${Math.round(dif / 7) > 1 ? "s" : ""} de calor que não existiam.`
+      : `Você tem cerca de <strong>${idade} anos</strong>. Quando você nasceu, Brasília
+         tinha <strong>${de} dias de calor</strong> por ano. Hoje tem <strong>${para}</strong>.`;
+
+    resposta.innerHTML = frase
+      + graficoIdade(resumo, ano)
+      + `<span class="miudo">Cada barra é um ano da sua vida, e o número em cima é
+         quantos dias passaram de 30 °C. A conta compara ${ano - metade}–${ano + metade}
+         com ${recentes[0].ano}–${recentes[recentes.length - 1].ano}, para um ano
+         fora do normal não entortar o resultado.</span>`;
   }
 
   $("#geracao-botao").addEventListener("click", responder);

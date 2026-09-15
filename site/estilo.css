@@ -281,6 +281,12 @@ h1 {
 .leitura p { margin: 0 0 .8rem; }
 .leitura strong { font-weight: 600; }
 
+/* ---------- grafico por idade (dentro da geracao) ---------- */
+
+.grafico-idade { margin: 1rem 0 .2rem; }
+.g-numero { font-size: 9px; font-weight: 700; fill: var(--tinta); }
+.g-eixo-nome { font-size: 9px; font-style: italic; }
+
 /* ---------- faixa do seculo (ERA5) ---------- */
 
 .seculo {
