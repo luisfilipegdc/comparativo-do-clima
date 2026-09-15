@@ -328,6 +328,23 @@ h1 {
 .g-numero { font-size: 9px; font-weight: 700; fill: var(--tinta); }
 .g-eixo-nome { font-size: 9px; font-style: italic; }
 
+.normais {
+  background: var(--papel-cartao);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  padding: 1.4rem 1.2rem 1.6rem;
+}
+.gn-antiga { fill: var(--tinta-fraca); opacity: .5; }
+.gn-nova   { fill: var(--sol); }
+.legenda-normais { margin: .4rem 0 0; font-size: .85rem; color: var(--tinta-fraca); }
+.legenda-normais .amostra {
+  display: inline-block; width: .8em; height: .8em; border-radius: 2px;
+  vertical-align: -.05em; margin: 0 .3em 0 .9em;
+}
+.legenda-normais .amostra:first-of-type { margin-left: 0; }
+.legenda-normais .gn-antiga { background: var(--tinta-fraca); opacity: .5; }
+.legenda-normais .gn-nova   { background: var(--sol); opacity: 1; }
+
 /* ---------- faixa do seculo (ERA5) ---------- */
 
 .seculo {

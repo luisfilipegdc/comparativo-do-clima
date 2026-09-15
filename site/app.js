@@ -8,6 +8,7 @@ const CONFIG = {
   // Publicado junto com o site, cai no CDN e chega em uma requisicao so.
   serie: "dados/serie.json",
   era5: "dados/era5.json",     // contexto longo: 1940 em diante
+  normais: "dados/normais.json", // normais oficiais do INMET, duas janelas de 30 anos
   lat: -15.78,
   lon: -47.93,
   fuso: "America/Sao_Paulo",
@@ -380,7 +381,7 @@ function blocoTendencias(resumo) {
     {
       campo: "umidade_media", unidade: " p.p.", casas: 2, nome: "de umidade, por década",
       traducao: "O ar ficou mais seco",
-      incerto: "A umidade: não deu para saber",
+      incerto: "A umidade: nossa série não alcança",
     },
   ];
 
@@ -544,9 +545,10 @@ function leituraHonesta(resumo) {
     : "As noites, curiosamente, esfriaram.";
 
   const umidade = !rUmi.claro
-    ? `Sobre a umidade <strong>não dá para afirmar nada</strong>: a série sugere
+    ? `Sobre a umidade, <strong>estes 25 anos não bastam</strong>: a série sugere
        ${comSinal(rUmi.porDecada, 2)} ponto por década, mas a margem de erro é
-       ±${br(rUmi.erroPorDecada, 2)} — ou seja, pode não haver mudança nenhuma.`
+       ±${br(rUmi.erroPorDecada, 2)}. As normais oficiais do INMET, com 60 anos,
+       <strong>mostram a queda</strong> — veja abaixo.`
     : `E o ar ficou mais seco: <strong>${comSinal(rUmi.porDecada, 2)} ponto percentual
        de umidade por década</strong>.`;
 
@@ -666,6 +668,85 @@ function montarSeculo(era5, resumoInmet) {
   $("#seculo").hidden = false;
 }
 
+/* --------------------------------------------- normais climatologicas */
+
+/** Barras pareadas: cada mes com a normal antiga e a nova lado a lado.
+    Onze meses caindo na mesma direcao dizem mais que qualquer teste - e
+    da para ver sem saber o que e um valor-p. */
+function graficoNormais(mensal) {
+  const pontos = mensal.filter((m) => m.antiga !== null && m.nova !== null);
+  if (!pontos.length) return "";
+
+  const larguraBarra = 11, vao = 3, grupo = 2 * larguraBarra + vao + 12;
+  const alturaUtil = 150, margemEsq = 30, margemBaixo = 26;
+  const largura = margemEsq + pontos.length * grupo + 8;
+
+  const todos = pontos.flatMap((m) => [m.antiga, m.nova]);
+  const minimo = Math.floor(Math.min(...todos) / 10) * 10 - 5;
+  const maximo = Math.ceil(Math.max(...todos) / 10) * 10;
+  const y = (v) => alturaUtil - ((v - minimo) / (maximo - minimo)) * alturaUtil + 10;
+
+  const iniciais = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
+
+  const barras = pontos.map((m, i) => {
+    const x = margemEsq + i * grupo;
+    const alt = (v) => alturaUtil + 10 - y(v);
+    return `
+      <rect class="gn-antiga" x="${x}" y="${y(m.antiga)}" width="${larguraBarra}" height="${alt(m.antiga)}" rx="2">
+        <title>${NOMES_MES[m.mes - 1]} · 1961–1990: ${br(m.antiga, 1)}%</title></rect>
+      <rect class="gn-nova" x="${x + larguraBarra + vao}" y="${y(m.nova)}" width="${larguraBarra}" height="${alt(m.nova)}" rx="2">
+        <title>${NOMES_MES[m.mes - 1]} · 1991–2020: ${br(m.nova, 1)}%</title></rect>
+      <text class="g-rotulo" x="${x + larguraBarra}" y="${alturaUtil + 24}" text-anchor="middle">${iniciais[m.mes - 1]}</text>`;
+  }).join("");
+
+  const grade = [minimo + 5, Math.round((minimo + maximo) / 2), maximo].map((v) =>
+    `<line class="g-eixo" x1="${margemEsq}" y1="${y(v)}" x2="${largura}" y2="${y(v)}"></line>
+     <text class="g-rotulo" x="0" y="${y(v) + 3}">${v}%</text>`).join("");
+
+  return `<svg viewBox="0 0 ${largura} ${alturaUtil + margemBaixo + 12}" role="img"
+    aria-label="Umidade média de cada mês nas normais de 1961-1990 e 1991-2020">
+    ${grade}${barras}</svg>
+    <p class="legenda-normais">
+      <span class="amostra gn-antiga"></span> 1961–1990
+      <span class="amostra gn-nova"></span> 1991–2020</p>`;
+}
+
+function montarNormais(n) {
+  if (!n?.umidade?.resumo) return null;
+  const u = n.umidade.resumo, c = n.chuva.resumo;
+  const dU = u.nova - u.antiga, dC = c.nova - c.antiga;
+
+  $("#normais-cartoes").innerHTML = `
+    <div class="tend ${dU < 0 ? "desce" : "sobe"}">
+      <span class="traducao">O ar secou</span>
+      <span class="valor">${br(u.antiga, 1)}% → ${br(u.nova, 1)}%</span>
+      <span class="nome">umidade média do ano · ${comSinal(dU, 1)} ${Math.abs(dU) < 1.05 ? "ponto" : "pontos"}</span>
+    </div>
+    <div class="tend ${dC < 0 ? "desce" : "sobe"}">
+      <span class="traducao">Choveu menos</span>
+      <span class="valor">${br(c.antiga, 0)} → ${br(c.nova, 0)} mm</span>
+      <span class="nome">chuva do ano · ${comSinal(dC, 0)} mm (${br(100 * dC / c.antiga, 1)}%)</span>
+    </div>`;
+
+  $("#grafico-normais").innerHTML = graficoNormais(n.umidade.mensal);
+
+  $("#normais-leitura").innerHTML = `
+    <p>A umidade caiu em <strong>${u.meses_em_queda} dos 12 meses</strong>. Não é um mês
+    atípico puxando a média: é o ano inteiro na mesma direção. A chuva caiu em
+    <strong>${c.meses_em_queda} dos 12</strong>.</p>
+    <p><strong>Por que isto importa aqui:</strong> na nossa série de 25 anos, a queda de
+    umidade não passava em teste estatístico — a margem de erro engolia o resultado.
+    Com <strong>60 anos e duas janelas de 30</strong>, o INMET detecta. A nossa série
+    não era prova de que nada mudou; ela era <strong>curta demais para ver</strong>.</p>
+    <p class="miudo">Normais Climatológicas do Brasil, INMET — estação convencional 83377
+    (Brasília/DF), janelas de 1961–1990 e 1991–2020. É outra estação e outro instrumento,
+    não a A001 desta página: por isso as normais aparecem aqui, separadas, e não
+    misturadas à série diária.</p>`;
+
+  $("#normais").hidden = false;
+  return n;
+}
+
 /* -------------------------------------------------------------------- selos */
 
 function selosDeRecorde(hoje, serieDoDia) {
@@ -741,7 +822,14 @@ async function main() {
     graficoAnual(resumo, "umidade_media", "Umidade média do ar por ano", null);
   $("#leitura-honesta").innerHTML = leituraHonesta(resumo);
 
-  // a faixa longa e complementar: se ela falhar, o resto da pagina segue de pe
+  // camadas complementares: se falharem, o resto da pagina segue de pe
+  try {
+    const resposta = await fetch(CONFIG.normais);
+    if (resposta.ok) montarNormais(await resposta.json());
+  } catch (erro) {
+    console.warn("normais indisponíveis:", erro.message);
+  }
+
   try {
     const resposta = await fetch(CONFIG.era5);
     if (resposta.ok) montarSeculo(await resposta.json(), resumo);
