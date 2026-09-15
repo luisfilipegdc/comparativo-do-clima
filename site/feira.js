@@ -5,6 +5,19 @@
    a mao aqui dentro. */
 
 const FONTES = { serie: "dados/serie.json", era5: "dados/era5.json" };
+
+/* Previsao sazonal do INMET (boletim de agosto/2026, valido para set-out-nov).
+   ATENCAO: este e o UNICO numero desta apresentacao que nao foi calculado dos
+   dados - foi lido do mapa de anomalias do INMET. Por isso carrega validade:
+   passado o trimestre, o bloco some sozinho, em vez de virar numero velho
+   apresentado como se fosse atual. Para renovar, veja o boletim novo em
+   portal.inmet.gov.br e atualize as tres linhas abaixo. */
+const PREVISAO = {
+  texto: "entre +1 °C e +1,5 °C acima da média",
+  periodo: "setembro, outubro e novembro de 2026",
+  valeAte: "2026-11-30",
+  fonte: "Previsão de anomalias de temperatura do INMET, boletim de agosto/2026",
+};
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 
@@ -323,6 +336,18 @@ function tela4(dados) {
   $("#jogo-palpite").addEventListener("keydown", (e) => { if (e.key === "Enter") revelar(); });
 }
 
+/** Fecho da tela 6: o que vem pela frente. Some sozinho quando vencer. */
+function telaFinal() {
+  const hoje = new Date().toISOString().slice(0, 10);
+  const alvo = $("#f-previsao");
+  if (!alvo || hoje > PREVISAO.valeAte) return;   // vencida: nao mostra
+
+  alvo.innerHTML = `<span class="previsao-etiqueta">Isto é previsão, não medição</span>
+    O INMET prevê que ${PREVISAO.periodo} fiquem
+    <b>${PREVISAO.texto}</b> em Brasília.`;
+  alvo.hidden = false;
+}
+
 function tela5(dados) {
   const inmet = dados.resumo.filter((d) => d.dias >= 300);
   if (!dados.era5 || inmet.length < 6) {
@@ -373,6 +398,7 @@ async function main() {
     tela3(dados, hoje);
     tela4(dados);
     tela5(dados);
+    telaFinal();
   } catch (erro) {
     console.error(erro);
     $("#f-comparativo").innerHTML =
