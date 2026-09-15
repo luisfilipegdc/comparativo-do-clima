@@ -250,6 +250,43 @@ body {
 .gf-barra-quente { fill: var(--quente); }
 .gf-rotulo { fill: var(--tinta-fraca); font-size: 11px; }
 
+/* ---------- o ano em quadradinhos ---------- */
+
+.grade-ano { margin: 0 0 clamp(.4rem, 1.4vh, .9rem); }
+.grade-ano svg { display: block; width: 100%; height: auto; max-height: 16vh; }
+
+.gr-titulo { fill: var(--tinta-fraca); font-size: 13px; font-weight: 600; font-family: system-ui, sans-serif; }
+.gr-destaque { fill: var(--quente); font-weight: 700; }
+
+/* cada dia entra sozinho: o olho acompanha o vermelho aparecendo */
+.gr-quente, .gr-ameno, .gr-vazio {
+  opacity: 0;
+  animation: surgir .32s ease-out forwards;
+}
+.gr-quente { fill: var(--quente); }
+.gr-ameno  { fill: var(--linha); }
+.gr-vazio  { fill: transparent; stroke: var(--linha); stroke-dasharray: 2 2; }
+
+@keyframes surgir { to { opacity: 1; } }
+
+.grade-legenda {
+  margin: .2rem 0 0;
+  font-size: clamp(.75rem, 1.6vh, 1rem);
+  color: var(--tinta-fraca);
+}
+.grade-legenda .amostra {
+  display: inline-block; width: .8em; height: .8em; border-radius: 2px;
+  vertical-align: -.05em; margin-right: .25em;
+}
+.grade-legenda .gr-quente { background: var(--quente); opacity: 1; animation: none; }
+.grade-legenda .gr-ameno  { background: var(--linha);  opacity: 1; animation: none; }
+
+/* quem prefere menos movimento nao leva animacao nenhuma */
+@media (prefers-reduced-motion: reduce) {
+  .gr-quente, .gr-ameno, .gr-vazio { opacity: 1; animation: none; }
+  .tela { animation: none; }
+}
+
 /* ---------- duelo cidade x regiao ---------- */
 
 .duelo { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: clamp(.7rem, 2vh, 1.4rem); }

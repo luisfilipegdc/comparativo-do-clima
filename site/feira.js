@@ -89,6 +89,20 @@ async function buscarHoje() {
   }
 }
 
+/** Numero que sobe contando ate o valor. Segura a atencao no momento da
+    revelacao - e da tempo do visitante perceber que errou o proprio chute. */
+function contarAte(elemento, alvo, duracao = 900) {
+  if (!elemento) return;
+  const inicio = performance.now();
+  function passo(agora) {
+    const t = Math.min(1, (agora - inicio) / duracao);
+    const suave = 1 - Math.pow(1 - t, 3);             // desacelera no fim
+    elemento.textContent = Math.round(alvo * suave);
+    if (t < 1) requestAnimationFrame(passo);
+  }
+  requestAnimationFrame(passo);
+}
+
 /* ------------------------------------------------------------- medias */
 
 function extremos(resumo, campo, n = 10) {
@@ -151,6 +165,38 @@ function tela3(dados, hoje) {
     || '<p class="carregando">Sem dado para esta data.</p>';
 }
 
+/** O ano inteiro como quadradinhos: 1 quadrado = 1 dia, vermelho = passou de
+    30 °C. Uma crianca de 10 anos nao le uma reta de tendencia, mas conta
+    bolinha vermelha na hora - e ve o vermelho dobrar de um ano para o outro. */
+function gradeAno(dias, ano, rotulo) {
+  const doAno = dias.filter((d) => d.data.startsWith(String(ano)));
+  if (!doAno.length) return "";
+
+  const lado = 13, vao = 2.4, linhas = 7;
+  const colunas = Math.ceil(doAno.length / linhas);
+  const largura = colunas * (lado + vao);
+  const altura = linhas * (lado + vao) + 26;
+
+  const quentes = doAno.filter((d) => d.temp_max !== null && d.temp_max > 30).length;
+
+  const celulas = doAno.map((d, i) => {
+    const col = Math.floor(i / linhas), lin = i % linhas;
+    const quente = d.temp_max !== null && d.temp_max > 30;
+    const classe = d.temp_max === null ? "gr-vazio" : quente ? "gr-quente" : "gr-ameno";
+    return `<rect class="${classe}" x="${col * (lado + vao)}" y="${lin * (lado + vao) + 22}"
+      width="${lado}" height="${lado}" rx="2.5"
+      style="animation-delay:${(i * 1.6).toFixed(0)}ms"><title>${d.data}${
+        d.temp_max !== null ? `: ${br(d.temp_max)} °C` : ""}</title></rect>`;
+  }).join("");
+
+  return `<figure class="grade-ano">
+    <svg viewBox="0 0 ${largura} ${altura}" role="img"
+      aria-label="Os dias de ${ano}: ${quentes} passaram de 30 graus">
+      <text class="gr-titulo" x="0" y="13">${rotulo} · <tspan class="gr-destaque">${quentes} dias quentes</tspan></text>
+      ${celulas}
+    </svg></figure>`;
+}
+
 /** Barras dos dias quentes por ano - so aparece depois do chute. */
 function graficoJogo(resumo) {
   const anos = resumo.filter((d) => d.dias >= 300);
@@ -187,6 +233,7 @@ function tela4(dados) {
      para <b>${meses(depois)} ${meses(depois) === 1 ? "mês" : "meses"}</b>.`;
 
   function revelar() {
+    const antes = Math.round(d.antes), depois = Math.round(d.depois);
     const palpite = Number($("#jogo-palpite").value);
     const erro = palpite ? Math.abs(palpite - depois) : null;
 
@@ -197,9 +244,26 @@ function tela4(dados) {
     else veredito = `Você chutou ${palpite}. É menos — mas ainda assim muito:`;
 
     $("#jogo-veredito").textContent = veredito;
-    $("#jogo-grafico").innerHTML = graficoJogo(dados.resumo);
+
+    // Dois anos lado a lado, dia por dia: e aqui que a crianca "ve" o dobro.
+    // Escolhe o ano MAIS PROXIMO de cada media em vez de um ano qualquer -
+    // senao a grade mostra 20 e 67 enquanto o texto acima diz 29 e 57, e a
+    // primeira coisa que perguntam e por que os numeros nao batem.
+    const cheios = dados.resumo.filter((r) => r.dias >= 360);
+    const maisPerto = (lista, alvo) => lista.reduce((a, b) =>
+      Math.abs(b.dias_acima_30 - alvo) < Math.abs(a.dias_acima_30 - alvo) ? b : a).ano;
+    const anoAntigo = maisPerto(cheios.slice(0, 10), antes);
+    const anoRecente = maisPerto(cheios.slice(-10), depois);
+    $("#jogo-grafico").innerHTML =
+      gradeAno(dados.dias, anoAntigo, `Um ano inteiro em ${anoAntigo}`)
+      + gradeAno(dados.dias, anoRecente, `Um ano inteiro em ${anoRecente}`)
+      + `<p class="grade-legenda"><span class="amostra gr-quente"></span> passou de 30 °C
+         &nbsp;&nbsp;<span class="amostra gr-ameno"></span> não passou
+         &nbsp;&nbsp;<em>cada quadradinho é um dia</em></p>`;
+
     $("#jogo-pergunta").hidden = true;
     $("#jogo-resposta").hidden = false;
+    contarAte($("#jogo-depois"), depois);
   }
 
   $("#jogo-botao").addEventListener("click", revelar);
