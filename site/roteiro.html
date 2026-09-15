@@ -101,6 +101,17 @@ async function montar() {
 
   const num = (rot, val) => `<li><span>${rot}</span><b>${val}</b></li>`;
 
+  // faixa da maxima nesta data ao longo da serie - o numero que o aluno usa
+  // para explicar por que hoje pode estar mais frio sem contradizer a tese
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const [, mes, dia] = hojeISO.split("-");
+  const idxMax = serie.campos.indexOf("temp_max");
+  const doDia = serie.dias
+    .filter(l => l[0].slice(5) === `${mes}-${dia}` && l[idxMax] !== null)
+    .map(l => l[idxMax]);
+  const dia_min = doDia.length ? br(Math.min(...doDia)) + " °C" : "—";
+  const dia_max = doDia.length ? br(Math.max(...doDia)) + " °C" : "—";
+
   const fichas = [
     ficha(1, "Abertura",
       `Oi! A gente quis saber uma coisa: <strong>o clima de Brasília mudou?</strong>
@@ -121,14 +132,21 @@ async function montar() {
       num("Dias com medição", br(serie.dias.length,0))),
 
     ficha(3, "Hoje e o passado",
-      `Agora olha só: esta é a temperatura de <strong>hoje</strong>. E estas são as
-       temperaturas <strong>no mesmo dia</strong>, há 5, 10 e 20 anos.
-       Repara que não é sempre que hoje é o mais quente — tem dia que era mais quente
-       antes! <strong>Um dia sozinho não prova nada.</strong> Por isso a gente não
-       olhou um dia: olhou todos.
-       <em>(Esta fala é importante — é ela que prepara a próxima tela.)</em>`,
+      `Esta é a temperatura de <strong>hoje</strong>, e estas são as do
+       <strong>mesmo dia</strong> há 5, 10 e 20 anos.
+       <br><br><strong>Se hoje estiver mais frio que algum ano antigo, aponte para
+       isso você mesmo, antes que o jurado aponte:</strong> "Olha só, hoje está
+       até mais frio que há 5 anos. Então não esquentou? Calma." Aí explique:
+       neste mesmo dia, ao longo dos anos, a máxima já foi de
+       <strong>${dia_min}</strong> a <strong>${dia_max}</strong> — depende da
+       sorte do dia. <strong>Um dia é tempo. Muitos dias é clima.</strong>
+       <em>(Esta é a fala mais importante da apresentação. É ela que prepara o jogo.)</em>`,
       num("Dias comparados", br(serie.dias.length,0)) +
-      num("Anos na série", `${de} a ${ate}`)),
+      num("Anos na série", `${de} a ${ate}`),
+      `<div class="aviso"><strong>Não tenha medo deste slide.</strong> Se hoje
+       estiver mais frio, é a sua melhor chance: quem levanta a objeção antes do
+       jurado ganha a confiança dele. Se você esconder, ele percebe sozinho e aí
+       vira ponto fraco.</div>`),
 
     ficha(4, "O jogo do chute",
       `Deixa eu te fazer uma pergunta. Em Brasília, <strong>quantos dias por ano</strong>

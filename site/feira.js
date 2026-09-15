@@ -139,8 +139,6 @@ function tela1e2(dados) {
 function tela3(dados, hoje) {
   const alvo = hoje?.data || dados.dias[dados.dias.length - 1].data;
   const [ano, mes, dia] = alvo.split("-").map(Number);
-  $("#f-data-hoje").innerHTML =
-    `Hoje é <span class="realce">${dia} de ${NOMES_MES[mes - 1]}</span>.<br>E nos outros anos?`;
 
   const porData = new Map(dados.dias.map((d) => [d.data, d]));
 
@@ -176,6 +174,37 @@ function tela3(dados, hoje) {
       <span class="barra-termo"><span class="barra-termo-cheio" style="height:${altura(i.valor)}%"></span></span>
       <span class="ano">${i.ano}${i.antigo ? " · sem rede" : ""}</span>
     </div>`).join("");
+
+  // Esta data, em TODOS os anos da serie: e o numero que desarma a objecao
+  // "mas hoje esta mais frio que ha 5 anos" antes de ela ser feita.
+  const mesmoDia = [];
+  for (let a = 2000; a < ano; a++) {
+    const d = porData.get(`${a}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`);
+    if (d && d.temp_max !== null) mesmoDia.push(d.temp_max);
+  }
+
+  // O texto se adapta ao dado do dia. Se hoje for mais frio que algum ano
+  // anterior, a tela ASSUME isso e transforma em pergunta - em vez de deixar
+  // o visitante notar sozinho e achar que o argumento caiu.
+  const maisQuentes = hoje ? itens.filter((i) => !i.hoje && i.valor > hoje.temp_max).length : 0;
+
+  if (maisQuentes > 0 && hoje) {
+    $("#f-data-hoje").innerHTML =
+      `Hoje está <span class="realce">mais frio</span> que
+       ${maisQuentes === 1 ? "em um desses anos" : `em ${maisQuentes} desses anos`}.`;
+    $("#f-texto-dia").innerHTML =
+      `Então não esquentou? <b>Calma.</b> Neste mesmo dia, ao longo de
+       ${mesmoDia.length} anos, a máxima já foi de <b>${br(Math.min(...mesmoDia))} °C</b>
+       a <b>${br(Math.max(...mesmoDia))} °C</b>. Um dia é sorte. <b>Vira a tela.</b>`;
+  } else {
+    $("#f-data-hoje").innerHTML =
+      `Hoje é <span class="realce">${dia} de ${NOMES_MES[mes - 1]}</span>.<br>E nos outros anos?`;
+    $("#f-texto-dia").innerHTML = mesmoDia.length
+      ? `Neste mesmo dia, ao longo de ${mesmoDia.length} anos, a máxima já foi de
+         <b>${br(Math.min(...mesmoDia))} °C</b> a <b>${br(Math.max(...mesmoDia))} °C</b>.
+         Um dia sozinho não prova nada — por isso olhamos todos.`
+      : "Um dia sozinho não prova nada — por isso olhamos todos.";
+  }
 }
 
 /** O ano inteiro como quadradinhos: 1 quadrado = 1 dia, vermelho = passou de
