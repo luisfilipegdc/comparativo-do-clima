@@ -25,6 +25,8 @@ function mostrar(i) {
   $("#atual").textContent = atual + 1;
   $("#anterior").disabled = atual === 0;
   $("#proximo").disabled = atual === telas.length - 1;
+  // a barra enche conforme a apresentacao anda: o visitante ve quanto falta
+  $("#progresso-barra").style.width = `${((atual + 1) / telas.length) * 100}%`;
 }
 
 function ligarNavegacao() {

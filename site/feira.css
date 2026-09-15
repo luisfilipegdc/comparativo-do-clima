@@ -71,23 +71,108 @@ body {
 
 .palco { height: 100%; }
 
+/* Cada tela ocupa a altura toda e distribui o conteudo em vez de empilhar
+   tudo no topo. Em 1366x768 a versao anterior usava 45% da tela e deixava
+   metade vazia; aqui as duas colunas ocupam a largura e o conteudo respira. */
 .tela {
   display: none;
   height: 100%;
-  padding: clamp(1.4rem, 4vh, 3.5rem) clamp(1.4rem, 5vw, 5rem) clamp(4.5rem, 10vh, 6rem);
-  flex-direction: column;
-  justify-content: center;
-  gap: clamp(.6rem, 1.6vh, 1.4rem);
-  max-width: 1500px;
+  padding: clamp(2rem, 7vh, 5rem) clamp(1.5rem, 6vw, 6rem) clamp(5rem, 12vh, 7rem);
+  max-width: 1600px;
   margin: 0 auto;
-  animation: entrar .28s ease-out;
+  align-content: center;
+  gap: clamp(1rem, 3.5vh, 2.6rem) clamp(2rem, 5vw, 5rem);
 }
 
-.tela.ativa { display: flex; }
+.tela.ativa { display: grid; }
+
+/* uma coluna: heroi e o jogo, onde o texto e o protagonista */
+.tela.heroi, .tela.tela-jogo {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
+}
+.tela.heroi { align-content: center; }
+
+/* duas colunas: texto a esquerda, visual a direita */
+/* linha 1 ocupa a sobra (1fr) e o rodape fica embaixo: e isso que faz o
+   conteudo encher a tela em vez de boiar no meio com 40% de ocupacao. */
+.tela.duplo {
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: stretch;
+}
+.tela.duplo .rodape-tela { grid-column: 1 / -1; align-self: end; }
+.tela.duplo .lado-texto { justify-content: center; }
+
+.lado-texto { display: flex; flex-direction: column; gap: clamp(.6rem, 1.8vh, 1.3rem); align-items: flex-start; }
+
+/* O lado visual estica para a altura util da tela - sem isso o conteudo
+   fica achatado no meio e sobra metade da tela vazia embaixo. */
+.lado-visual { min-width: 0; height: 100%; display: grid; }
+.lado-visual > * { height: 100%; }
+
+/* empilhados em uma coluna, os cartoes ocupam a altura em vez da largura */
+.tela.duplo .cartoes-feira,
+.tela.duplo .duelo,
+.tela.duplo .conclusoes { grid-template-columns: minmax(0, 1fr); align-content: stretch; }
+
+.tela.duplo .cartao-feira,
+.tela.duplo .duelo-lado {
+  display: flex; flex-direction: column; justify-content: center;
+}
+
+/* as colunas de ano continuam lado a lado - elas SAO uma linha do tempo */
+.tela.duplo .comparativo-feira { grid-template-columns: repeat(4, minmax(0, 1fr)); align-content: stretch; }
+.tela.duplo .col-ano { display: flex; flex-direction: column; justify-content: center; }
+
+/* em pe ou tela estreita, volta para uma coluna */
+/* Em pe (celular do aluno) o conteudo nao cabe em uma tela: aqui a
+   apresentacao PODE rolar. Sem isso o overflow:hidden corta o final das
+   telas 2, 5 e 6 em silencio - e ninguem percebe ate a hora de apresentar. */
+@media (max-width: 900px), (orientation: portrait) {
+  html, body { height: auto; overflow: auto; }
+  .palco { height: auto; }
+  .tela {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding-bottom: clamp(6rem, 14vh, 8rem);
+  }
+  .tela.duplo { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; align-content: start; }
+  .lado-visual { height: auto; }
+  .tela.duplo .comparativo-feira { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* cada elemento entra por conta, em cascata - a tela ganha ritmo */
+.tela.ativa > *,
+.tela.ativa .lado-texto > * {
+  animation: entrar .5s cubic-bezier(.2, .9, .3, 1.1) backwards;
+}
+.tela.ativa > *:nth-child(1) { animation-delay: .02s; }
+.tela.ativa > *:nth-child(2) { animation-delay: .10s; }
+.tela.ativa > *:nth-child(3) { animation-delay: .18s; }
+.tela.ativa > *:nth-child(4) { animation-delay: .26s; }
+.tela.ativa .lado-texto > *:nth-child(1) { animation-delay: .06s; }
+.tela.ativa .lado-texto > *:nth-child(2) { animation-delay: .14s; }
+.tela.ativa .lado-texto > *:nth-child(3) { animation-delay: .22s; }
 
 @keyframes entrar {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(18px); }
   to   { opacity: 1; transform: none; }
+}
+
+/* ---------- barra de progresso ---------- */
+
+.progresso {
+  position: fixed; top: 0; left: 0; right: 0; height: 5px;
+  background: var(--linha);
+  z-index: 10;
+}
+.progresso span {
+  display: block; height: 100%; width: 0;
+  background: linear-gradient(90deg, var(--marca), var(--marca-clara) 45%, var(--sol) 75%, var(--calor));
+  border-radius: 0 3px 3px 0;
+  transition: width .45s cubic-bezier(.2, .9, .3, 1);
 }
 
 /* ---------- tipografia ---------- */
@@ -107,7 +192,7 @@ body {
 
 .gigante {
   margin: 0;
-  font-size: clamp(2.4rem, 8.5vh, 6rem);
+  font-size: clamp(2.6rem, 10.5vh, 7rem);
   line-height: 1.02;
   letter-spacing: -.035em;
   font-weight: 700;
@@ -115,7 +200,8 @@ body {
 
 .grande {
   margin: 0;
-  font-size: clamp(1.7rem, 5.4vh, 3.6rem);
+  max-width: 16ch;
+  font-size: clamp(1.9rem, 7vh, 4.4rem);
   line-height: 1.1;
   letter-spacing: -.025em;
   font-weight: 700;
@@ -131,9 +217,9 @@ body {
 
 .linha-grande {
   margin: 0;
-  font-size: clamp(1rem, 2.6vh, 1.7rem);
-  line-height: 1.45;
-  max-width: 30ch;
+  font-size: clamp(1.05rem, 3vh, 1.9rem);
+  line-height: 1.4;
+  max-width: 26ch;
 }
 .linha-grande b { color: var(--quente); }
 
@@ -180,7 +266,7 @@ body {
 
 .cartao-feira .numero {
   display: block;
-  font-size: clamp(1.9rem, 6vh, 3.6rem);
+  font-size: clamp(2rem, 7vh, 4.2rem);
   font-weight: 800;
   letter-spacing: -.03em;
   line-height: 1;
@@ -238,7 +324,7 @@ body {
 .col-ano .valor {
   display: block;
   margin-top: .3rem;
-  font-size: clamp(1.7rem, 5.2vh, 3.1rem);
+  font-size: clamp(1.9rem, 6.4vh, 3.8rem);
   font-weight: 700;
   letter-spacing: -.03em;
   line-height: 1;
@@ -305,7 +391,7 @@ body {
 
 .jogo-numero {
   margin: 0;
-  font-size: clamp(2.2rem, 7.5vh, 5rem);
+  font-size: clamp(2.4rem, 9vh, 6rem);
   font-weight: 800;
   letter-spacing: -.035em;
   line-height: 1.05;
@@ -331,7 +417,7 @@ body {
 /* ---------- o ano em quadradinhos ---------- */
 
 .grade-ano { margin: 0 0 clamp(.4rem, 1.4vh, .9rem); }
-.grade-ano svg { display: block; width: 100%; height: auto; max-height: 16vh; }
+.grade-ano svg { display: block; width: 100%; height: auto; max-height: 18vh; }
 
 .gr-titulo { fill: var(--tinta-fraca); font-size: 13px; font-weight: 600; font-family: system-ui, sans-serif; }
 .gr-destaque { fill: var(--quente); font-weight: 700; }
@@ -368,9 +454,9 @@ body {
 
 /* quem prefere menos movimento nao leva animacao nenhuma */
 @media (prefers-reduced-motion: reduce) {
-  .gr-quente, .gr-ameno, .gr-vazio,
-  .cartao-feira, .jogo-numero .realce { opacity: 1; animation: none; transform: none; }
-  .tela { animation: none; }
+  .gr-quente, .gr-ameno, .gr-vazio, .cartao-feira, .jogo-numero .realce,
+  .tela.ativa > *, .tela.ativa .lado-texto > * { opacity: 1; animation: none; transform: none; }
+  .progresso span { transition: none; }
   body { animation: none; }
 }
 
@@ -388,7 +474,7 @@ body {
 .duelo-lado.cidade { border-color: var(--calor); background: var(--papel-cartao); background: linear-gradient(160deg, color-mix(in srgb, var(--calor) 9%, var(--papel-cartao)), var(--papel-cartao)); }
 .duelo-lado:not(.cidade) { border-color: var(--frio); background: var(--papel-cartao); background: linear-gradient(160deg, color-mix(in srgb, var(--frio) 9%, var(--papel-cartao)), var(--papel-cartao)); }
 .duelo-lado .titulo { display: block; font-size: clamp(.85rem, 1.9vh, 1.15rem); font-weight: 600; }
-.duelo-lado .valor  { display: block; margin-top: .3rem; font-size: clamp(1.8rem, 5.5vh, 3.2rem); font-weight: 700; letter-spacing: -.03em; line-height: 1; }
+.duelo-lado .valor  { display: block; margin-top: .3rem; font-size: clamp(2rem, 6.8vh, 4rem); font-weight: 700; letter-spacing: -.03em; line-height: 1; }
 .duelo-lado.cidade .valor { color: var(--calor-forte); }
 .duelo-lado:not(.cidade) .valor { color: var(--marca); }
 @media (prefers-color-scheme: dark){ .duelo-lado.cidade .valor{color:var(--calor);} .duelo-lado:not(.cidade) .valor{color:var(--frio);} }
@@ -398,13 +484,28 @@ body {
 
 .conclusoes {
   margin: 0;
-  padding-left: 1.2em;
-  font-size: clamp(1rem, 2.6vh, 1.6rem);
-  line-height: 1.5;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: clamp(.6rem, 1.8vh, 1.2rem);
+  font-size: clamp(.98rem, 2.7vh, 1.6rem);
+  line-height: 1.4;
 }
-.conclusoes li { margin-bottom: .5em; }
+.conclusoes li {
+  margin: 0;
+  display: flex; align-items: center;
+  background: var(--papel-cartao);
+  border: 2px solid var(--linha);
+  border-left-width: 8px;
+  border-radius: var(--raio);
+  padding: clamp(.7rem, 2vh, 1.2rem) clamp(.9rem, 2vw, 1.4rem);
+  box-shadow: 0 10px 24px -18px var(--marca);
+  animation: subir .5s cubic-bezier(.2, .9, .3, 1.2) backwards;
+}
+.conclusoes li:nth-child(1) { border-left-color: var(--calor);  animation-delay: .10s; }
+.conclusoes li:nth-child(2) { border-left-color: var(--frio);   animation-delay: .22s; }
+.conclusoes li:nth-child(3) { border-left-color: var(--sol);    animation-delay: .34s; }
 .conclusoes b { color: var(--calor-forte); }
-.conclusoes li::marker { color: var(--marca-clara); }
 @media (prefers-color-scheme: dark){ .conclusoes b { color: var(--calor); } }
 
 /* ---------- controles ---------- */

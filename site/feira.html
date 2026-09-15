@@ -9,10 +9,12 @@
 </head>
 <body>
 
+<div class="progresso" aria-hidden="true"><span id="progresso-barra"></span></div>
+
 <div class="palco" id="palco">
 
   <!-- 1 -------------------------------------------------- abertura -->
-  <section class="tela" data-aluno="1" data-titulo="Abertura">
+  <section class="tela heroi" data-aluno="1" data-titulo="Abertura">
     <p class="etiqueta">Feira de Ciências</p>
     <h1 class="gigante">O clima de Brasília<br><span class="realce">mudou?</span></h1>
     <p class="linha-grande">
@@ -23,9 +25,14 @@
   </section>
 
   <!-- 2 -------------------------------------------------- o dado -->
-  <section class="tela" data-aluno="2" data-titulo="De onde vem o dado">
-    <p class="etiqueta">Passo 1 · De onde vem o número</p>
-    <h2 class="grande">Não somos nós que medimos.<br>É uma estação do governo.</h2>
+  <section class="tela duplo" data-aluno="2" data-titulo="De onde vem o dado">
+    <div class="lado-texto">
+      <p class="etiqueta">Passo 1 · De onde vem o número</p>
+      <h2 class="grande">Não somos nós<br>que medimos.</h2>
+      <p class="linha-grande">É uma estação do governo, funcionando sozinha,
+        24 horas por dia, há mais de 25 anos.</p>
+    </div>
+    <div class="lado-visual">
     <div class="cartoes-feira">
       <div class="cartao-feira">
         <span class="numero" id="f-estacao">A001</span>
@@ -40,15 +47,22 @@
         <span class="rotulo">anos de história guardada</span>
       </div>
     </div>
+    </div>
     <p class="rodape-tela">Fonte: INMET · Portal Brasileiro de Dados Abertos — qualquer um pode baixar.</p>
   </section>
 
   <!-- 3 -------------------------------------------------- hoje x passado -->
-  <section class="tela" data-aluno="3" data-titulo="Hoje e o passado">
-    <p class="etiqueta">Passo 2 · O mesmo dia, outros anos</p>
-    <h2 class="grande" id="f-data-hoje">Hoje</h2>
-    <div class="comparativo-feira" id="f-comparativo">
-      <p class="carregando">Buscando…</p>
+  <section class="tela duplo" data-aluno="3" data-titulo="Hoje e o passado">
+    <div class="lado-texto">
+      <p class="etiqueta">Passo 2 · O mesmo dia, outros anos</p>
+      <h2 class="grande" id="f-data-hoje">Hoje</h2>
+      <p class="linha-grande">Nem sempre hoje é o mais quente. Por isso a gente
+        não olhou <em>um</em> dia — olhou todos.</p>
+    </div>
+    <div class="lado-visual">
+      <div class="comparativo-feira" id="f-comparativo">
+        <p class="carregando">Buscando…</p>
+      </div>
     </div>
     <p class="rodape-tela">Um dia só não prova nada — por isso a gente olhou todos.</p>
   </section>
@@ -78,28 +92,36 @@
   </section>
 
   <!-- 5 -------------------------------------------------- cidade x regiao -->
-  <section class="tela" data-aluno="5" data-titulo="A cidade e a região">
-    <p class="etiqueta">Passo 4 · "Mas não é só a cidade esquentando?"</p>
-    <h2 class="grande">Essa pergunta é boa.<br>A gente foi checar.</h2>
-    <div class="duelo" id="f-duelo">
-      <p class="carregando">Calculando…</p>
+  <section class="tela duplo" data-aluno="5" data-titulo="A cidade e a região">
+    <div class="lado-texto">
+      <p class="etiqueta">Passo 4 · "Só a cidade esquentou?"</p>
+      <h2 class="grande">Essa pergunta<br>é boa.</h2>
+      <p class="linha-grande">A gente foi checar se o calor é só aqui dentro
+        ou se é o planeta inteiro.</p>
+    </div>
+    <div class="lado-visual">
+      <div class="duelo" id="f-duelo">
+        <p class="carregando">Calculando…</p>
+      </div>
     </div>
     <p class="rodape-tela" id="f-duelo-nota"></p>
   </section>
 
   <!-- 6 -------------------------------------------------- fechamento -->
-  <section class="tela" data-aluno="6" data-titulo="O que isso significa">
-    <p class="etiqueta">Passo 5 · E daí?</p>
-    <h2 class="grande">O que a gente descobriu</h2>
+  <section class="tela duplo" data-aluno="6" data-titulo="O que isso significa">
+    <div class="lado-texto">
+      <p class="etiqueta">Passo 5 · E daí?</p>
+      <h2 class="grande">O que a gente<br>descobriu</h2>
+      <p class="linha-grande destaque-final">A gente não escolheu só os números
+        que ajudavam. <b>Mostramos também o que derruba a nossa ideia.</b></p>
+    </div>
+    <div class="lado-visual">
     <ul class="conclusoes">
       <li><b>Os dias esquentaram</b> — e os dias de muito calor <b>dobraram</b>.</li>
       <li><b>As noites quase não mudaram.</b> A gente achou que tinham mudado; o dado disse que não.</li>
       <li><b>Parte é a cidade</b> crescendo em cima do termômetro, parte é o planeta inteiro esquentando.</li>
     </ul>
-    <p class="linha-grande destaque-final">
-      A gente não escolheu os números que ajudavam.<br>
-      <b>Mostramos também o que derruba a nossa ideia.</b>
-    </p>
+    </div>
     <p class="rodape-tela">Tudo isto está em comparativo-do-clima.vercel.app · dados do INMET e ERA5</p>
   </section>
 
