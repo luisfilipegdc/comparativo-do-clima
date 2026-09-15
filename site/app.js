@@ -6,7 +6,6 @@
 const CONFIG = {
   supabaseUrl: "https://frsidsdrexolvcfxzroe.supabase.co",
   supabaseKey: "sb_publishable_xgr6ki59dLrTcdjDlmEtZA_LAF6m1BC",
-  schema: "clima",
   lat: -15.78,
   lon: -47.93,
   fuso: "America/Sao_Paulo",
@@ -72,7 +71,6 @@ async function doSupabase(recurso, parametros) {
     headers: {
       apikey: CONFIG.supabaseKey,
       Authorization: `Bearer ${CONFIG.supabaseKey}`,
-      "Accept-Profile": CONFIG.schema,
     },
   });
   if (!resposta.ok) {
@@ -268,16 +266,11 @@ function graficoAnual(dados, campo, rotuloAria, destacarAcima) {
         <title>${p.ano}: ${br(v, campo === "umidade_media" ? 1 : 0)}</title></rect>${rotulo}`;
   }).join("");
 
-  // reta de tendencia (minimos quadrados) sobre os anos completos
-  const xs = pontos.map((_, i) => i);
-  const mx = xs.reduce((a, b) => a + b, 0) / xs.length;
-  const my = valores.reduce((a, b) => a + b, 0) / valores.length;
-  const inclin = xs.reduce((s, x, i) => s + (x - mx) * (valores[i] - my), 0)
-    / xs.reduce((s, x) => s + (x - mx) ** 2, 0);
-  const y0 = my + inclin * (0 - mx), y1 = my + inclin * (xs.length - 1 - mx);
-  const linha = `<line class="g-tendencia"
-     x1="${margemEsq + larguraBarra / 2}" y1="${escala(y0)}"
-     x2="${margemEsq + (xs.length - 1) * (larguraBarra + espaco) + larguraBarra / 2}" y2="${escala(y1)}"></line>`;
+  // reta de tendencia (minimos quadrados) sobre os anos completos.
+  // Com menos de tres anos nao ha tendencia: a divisao daria NaN e o SVG quebra.
+  const linha = pontos.length < 3 ? "" : retaTendencia(pontos, valores, {
+    margemEsq, larguraBarra, espaco, escala,
+  });
 
   const grade = [minimo, maximo].map((v) =>
     `<line class="g-eixo" x1="${margemEsq}" y1="${escala(v)}" x2="${largura}" y2="${escala(v)}"></line>
@@ -285,6 +278,18 @@ function graficoAnual(dados, campo, rotuloAria, destacarAcima) {
 
   return `<svg viewBox="0 0 ${largura} ${altura}" role="img" aria-label="${rotuloAria}">
      ${grade}${barras}${linha}</svg>`;
+}
+
+function retaTendencia(pontos, valores, g) {
+  const xs = pontos.map((_, i) => i);
+  const mx = xs.reduce((a, b) => a + b, 0) / xs.length;
+  const my = valores.reduce((a, b) => a + b, 0) / valores.length;
+  const inclin = xs.reduce((s, x, i) => s + (x - mx) * (valores[i] - my), 0)
+    / xs.reduce((s, x) => s + (x - mx) ** 2, 0);
+  const y0 = my + inclin * (0 - mx), y1 = my + inclin * (xs.length - 1 - mx);
+  return `<line class="g-tendencia"
+     x1="${g.margemEsq + g.larguraBarra / 2}" y1="${g.escala(y0)}"
+     x2="${g.margemEsq + (xs.length - 1) * (g.larguraBarra + g.espaco) + g.larguraBarra / 2}" y2="${g.escala(y1)}"></line>`;
 }
 
 /** Inclinacao por decada de uma serie anual. */
