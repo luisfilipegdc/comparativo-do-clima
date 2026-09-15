@@ -102,8 +102,12 @@ body {
   align-items: center;
   justify-items: center;
 }
-.tela.tela-jogo .lado-texto { align-items: center; text-align: center; max-width: 24ch; }
-.tela.tela-jogo .jogo-titulo { max-width: none; }
+.tela.tela-jogo .lado-texto { align-items: center; text-align: center; max-width: min(92vw, 52rem); }
+.tela.tela-jogo .jogo-titulo {
+  max-width: none;
+  /* min() com vw impede o titulo virar 6 linhas em tela estreita */
+  font-size: clamp(1.7rem, min(6.4vh, 4.6vw), 4.2rem);
+}
 .tela.tela-jogo .lado-visual { display: none; }
 
 .tela.tela-jogo.revelado {
@@ -144,7 +148,7 @@ body {
 
 /* as colunas de ano continuam lado a lado - elas SAO uma linha do tempo */
 .tela.duplo .comparativo-feira { grid-template-columns: repeat(4, minmax(0, 1fr)); align-content: stretch; }
-.tela.duplo .col-ano { display: flex; flex-direction: column; justify-content: center; }
+.tela.duplo .col-ano { display: flex; flex-direction: column; justify-content: flex-start; }
 
 /* em pe ou tela estreita, volta para uma coluna */
 /* Em pe (celular do aluno) o conteudo nao cabe em uma tela: aqui a
@@ -167,18 +171,18 @@ body {
 /* cada elemento entra por conta, em cascata - a tela ganha ritmo */
 .tela.ativa > *,
 .tela.ativa .lado-texto > * {
-  animation: entrar .5s cubic-bezier(.2, .9, .3, 1.1) backwards;
+  animation: entrar .3s cubic-bezier(.25, .8, .35, 1) backwards;
 }
-.tela.ativa > *:nth-child(1) { animation-delay: .02s; }
-.tela.ativa > *:nth-child(2) { animation-delay: .10s; }
-.tela.ativa > *:nth-child(3) { animation-delay: .18s; }
-.tela.ativa > *:nth-child(4) { animation-delay: .26s; }
-.tela.ativa .lado-texto > *:nth-child(1) { animation-delay: .06s; }
-.tela.ativa .lado-texto > *:nth-child(2) { animation-delay: .14s; }
-.tela.ativa .lado-texto > *:nth-child(3) { animation-delay: .22s; }
+.tela.ativa > *:nth-child(1) { animation-delay: .01s; }
+.tela.ativa > *:nth-child(2) { animation-delay: .05s; }
+.tela.ativa > *:nth-child(3) { animation-delay: .10s; }
+.tela.ativa > *:nth-child(4) { animation-delay: .15s; }
+.tela.ativa .lado-texto > *:nth-child(1) { animation-delay: .04s; }
+.tela.ativa .lado-texto > *:nth-child(2) { animation-delay: .09s; }
+.tela.ativa .lado-texto > *:nth-child(3) { animation-delay: .14s; }
 
 @keyframes entrar {
-  from { opacity: 0; transform: translateY(18px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: none; }
 }
 
@@ -209,6 +213,10 @@ body {
   background: linear-gradient(100deg, var(--marca), var(--marca-clara));
   padding: .38em .95em;
   border-radius: 999px;
+  white-space: nowrap;      /* "PASSO 3 · CHUTE ANTES DE VER" quebrava em duas linhas */
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gigante {
@@ -221,7 +229,7 @@ body {
 
 .grande {
   margin: 0;
-  max-width: 16ch;
+  max-width: 17ch;
   font-size: clamp(1.9rem, 7vh, 4.4rem);
   line-height: 1.1;
   letter-spacing: -.025em;
@@ -248,13 +256,13 @@ body {
 
 .dica {
   margin: 0;
-  font-size: clamp(.75rem, 1.5vh, 1rem);
+  font-size: clamp(.88rem, 1.8vh, 1.1rem);
   color: var(--tinta-fraca);
 }
 
 .rodape-tela {
   margin: 0;
-  font-size: clamp(.75rem, 1.6vh, 1.05rem);
+  font-size: clamp(.9rem, 1.9vh, 1.2rem);
   color: var(--tinta-fraca);
 }
 
@@ -305,7 +313,7 @@ body {
 .cartao-feira .rotulo {
   display: block;
   margin-top: .45rem;
-  font-size: clamp(.8rem, 1.7vh, 1.1rem);
+  font-size: clamp(.95rem, 2.1vh, 1.25rem);
   color: var(--tinta-fraca);
   line-height: 1.35;
 }
@@ -336,7 +344,7 @@ body {
 
 .col-ano .quando {
   display: block;
-  font-size: clamp(.72rem, 1.5vh, .98rem);
+  font-size: clamp(.82rem, 1.8vh, 1.08rem);
   color: var(--tinta-fraca);
   text-transform: uppercase;
   letter-spacing: .06em;
@@ -352,7 +360,53 @@ body {
 }
 .col-ano.hoje .valor { color: var(--calor-forte); }
 @media (prefers-color-scheme: dark){ .col-ano.hoje .valor { color: var(--calor); } }
-.col-ano .ano { display: block; margin-top: .3rem; font-size: clamp(.72rem, 1.5vh, .95rem); color: var(--tinta-fraca); }
+.col-ano .ano { display: block; margin-top: .45rem; font-size: clamp(.85rem, 1.8vh, 1.1rem); color: var(--tinta-fraca); font-weight: 600; }
+
+/* termometro dentro do cartao de ano: enche o retangulo e faz a comparacao
+   ser vista antes de ser lida */
+.barra-termo {
+  display: block;
+  flex: 1 1 auto;
+  min-height: clamp(50px, 16vh, 190px);
+  width: clamp(14px, 2.2vw, 26px);
+  margin: clamp(.6rem, 1.8vh, 1.1rem) auto;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .07);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+.barra-termo-cheio {
+  display: block;
+  width: 100%;
+  border-radius: 999px;
+  background: linear-gradient(to top, var(--frio), var(--sol) 62%, var(--calor));
+  animation: encher .7s cubic-bezier(.2, .9, .3, 1.1) backwards;
+  transform-origin: bottom;
+}
+.col-ano.hoje .barra-termo-cheio { background: linear-gradient(to top, var(--sol), var(--calor)); }
+
+@keyframes encher { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+/* barra do duelo: a diferenca entre cidade e regiao vira comprimento */
+.duelo-barra {
+  display: block;
+  height: clamp(10px, 1.8vh, 16px);
+  margin: clamp(.5rem, 1.5vh, .9rem) 0 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .07);
+  overflow: hidden;
+}
+.duelo-barra span {
+  display: block; height: 100%;
+  border-radius: 999px;
+  animation: alargar .8s cubic-bezier(.2, .9, .3, 1.1) backwards;
+  transform-origin: left;
+}
+.duelo-lado.cidade .duelo-barra span { background: linear-gradient(90deg, var(--sol), var(--calor)); }
+.duelo-lado:not(.cidade) .duelo-barra span { background: linear-gradient(90deg, var(--marca-clara), var(--frio)); }
+
+@keyframes alargar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 /* ---------- o jogo do chute ---------- */
 
@@ -485,7 +539,7 @@ body {
 
 .grade-legenda {
   margin: .3rem 0 0;
-  font-size: clamp(.78rem, 1.7vh, 1.05rem);
+  font-size: clamp(.88rem, 1.9vh, 1.15rem);
   color: var(--tinta-fraca);
   display: flex;
   flex-wrap: wrap;
@@ -504,6 +558,7 @@ body {
 /* quem prefere menos movimento nao leva animacao nenhuma */
 @media (prefers-reduced-motion: reduce) {
   .gr-quente, .gr-ameno, .gr-vazio, .cartao-feira, .jogo-numero .realce,
+  .barra-termo-cheio, .duelo-barra span, .conclusoes li,
   .tela.ativa > *, .tela.ativa .lado-texto > * { opacity: 1; animation: none; transform: none; }
   .progresso span { transition: none; }
   body { animation: none; }
@@ -527,7 +582,7 @@ body {
 .duelo-lado.cidade .valor { color: var(--calor-forte); }
 .duelo-lado:not(.cidade) .valor { color: var(--marca); }
 @media (prefers-color-scheme: dark){ .duelo-lado.cidade .valor{color:var(--calor);} .duelo-lado:not(.cidade) .valor{color:var(--frio);} }
-.duelo-lado .nota   { display: block; margin-top: .45rem; font-size: clamp(.78rem, 1.6vh, 1rem); color: var(--tinta-fraca); line-height: 1.35; }
+.duelo-lado .nota   { display: block; margin-top: .5rem; font-size: clamp(.9rem, 1.9vh, 1.15rem); color: var(--tinta-fraca); line-height: 1.35; }
 
 /* ---------- conclusoes ---------- */
 
@@ -551,8 +606,8 @@ body {
   box-shadow: 0 10px 24px -18px var(--marca);
   animation: subir .5s cubic-bezier(.2, .9, .3, 1.2) backwards;
 }
-.conclusoes li:nth-child(1) { border-left-color: var(--calor);  animation-delay: .10s; }
-.conclusoes li:nth-child(2) { border-left-color: var(--frio);   animation-delay: .22s; }
+.conclusoes li:nth-child(1) { border-left-color: var(--calor);  animation-delay: .05s; }
+.conclusoes li:nth-child(2) { border-left-color: var(--frio);   animation-delay: .14s; }
 .conclusoes li:nth-child(3) { border-left-color: var(--sol);    animation-delay: .34s; }
 .conclusoes b { color: var(--calor-forte); }
 @media (prefers-color-scheme: dark){ .conclusoes b { color: var(--calor); } }
@@ -587,7 +642,7 @@ body {
 .controles .secundario { font-size: clamp(.9rem, 2vh, 1.2rem); }
 
 .contador {
-  font-size: clamp(.85rem, 1.9vh, 1.15rem);
+  font-size: clamp(.95rem, 2vh, 1.25rem);
   color: var(--tinta-fraca);
   min-width: 4ch;
   text-align: center;

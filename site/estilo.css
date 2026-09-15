@@ -1,32 +1,45 @@
 /* Clima Brasilia - mobile first, sem framework. */
 
+/* ====================================================================
+   PALETA — a mesma da apresentação da feira (feira.css). Trocar aqui e lá
+   veste o projeto inteiro com as cores da escola. Estes hexadecimais NÃO
+   são as cores oficiais do Marista.
+   ==================================================================== */
 :root {
-  --tinta:        #1b2430;
-  --tinta-fraca:  #5b6b7c;
-  --papel:        #fbfaf7;
+  --marca:        #0b4da2;
+  --marca-clara:  #2f9fe8;
+  --calor:        #ff3d2e;
+  --calor-forte:  #d40f1f;
+  --sol:          #ffb020;
+  --frio:         #00a6ed;
+
+  --tinta:        #12203a;
+  --tinta-fraca:  #55657f;
+  --papel:        #f7fbff;
   --papel-cartao: #ffffff;
-  --linha:        #e3e0d9;
-  --quente:       #d64545;
-  --frio:         #3b7ea1;
-  --seco:         #c98a2b;
-  --chuva:        #3b7ea1;
-  --hoje:         #1b2430;
-  --raio: 14px;
-  --sombra: 0 1px 2px rgba(27, 36, 48, .06), 0 6px 18px rgba(27, 36, 48, .05);
+  --linha:        #d9e4f0;
+  --quente:       var(--calor);
+  --seco:         #b57400;
+  --chuva:        var(--frio);
+  --hoje:         #12203a;
+  --raio: 16px;
+  --sombra: 0 1px 2px rgba(11, 77, 162, .07), 0 10px 26px -16px rgba(11, 77, 162, .5);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --tinta:        #eef1f4;
-    --tinta-fraca:  #9aa8b6;
-    --papel:        #14181d;
-    --papel-cartao: #1c2229;
-    --linha:        #2c343d;
-    --quente:       #ff6b6b;
-    --frio:         #6fb3d2;
-    --seco:         #e0a94a;
-    --hoje:         #eef1f4;
-    --sombra: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 18px rgba(0, 0, 0, .25);
+    --tinta:        #f2f7fc;
+    --tinta-fraca:  #9db0c7;
+    --papel:        #0a1526;
+    --papel-cartao: #132139;
+    --linha:        #24344f;
+    --calor:        #ff6146;
+    --sol:          #ffc34d;
+    --frio:         #45c2ff;
+    --marca-clara:  #59b6f5;
+    --seco:         #ffc34d;
+    --hoje:         #f2f7fc;
+    --sombra: 0 1px 2px rgba(0, 0, 0, .35), 0 10px 26px -16px rgba(0, 0, 0, .7);
   }
 }
 
@@ -35,8 +48,14 @@
 body {
   margin: 0;
   padding: 0 1.1rem 3rem;
-  background: var(--papel);
   color: var(--tinta);
+  /* mesmo fundo vivo da feira, mais discreto porque aqui se lê texto longo */
+  background: var(--papel);
+  background:
+    radial-gradient(900px 520px at 8% -8%, color-mix(in srgb, var(--marca-clara) 15%, transparent), transparent 62%),
+    radial-gradient(760px 480px at 96% 2%, color-mix(in srgb, var(--sol) 13%, transparent), transparent 64%),
+    var(--papel);
+  background-attachment: fixed;
   font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-text-size-adjust: 100%;
 }
@@ -68,10 +87,12 @@ h1 {
 
 .manchete {
   margin: 1.4rem 0 2rem;
-  padding: 1.2rem 1.2rem 1.1rem;
+  padding: 1.3rem 1.3rem 1.2rem;
   border-radius: var(--raio);
-  background: var(--quente);
+  background: var(--calor-forte);
+  background: linear-gradient(115deg, var(--calor-forte), var(--calor) 55%, var(--sol));
   color: #fff;
+  box-shadow: 0 14px 34px -20px var(--calor);
 }
 
 .manchete-frase {
@@ -123,15 +144,18 @@ h1 {
 
 .geracao-campo button {
   font: inherit;
-  font-weight: 600;
-  padding: .55rem 1rem;
+  font-weight: 700;
+  padding: .55rem 1.2rem;
   border: 0;
-  border-radius: 9px;
-  background: var(--tinta);
-  color: var(--papel);
+  border-radius: 999px;
+  background: linear-gradient(100deg, var(--marca), var(--marca-clara));
+  color: #fff;
   cursor: pointer;
+  box-shadow: 0 8px 20px -10px var(--marca);
+  transition: transform .15s, box-shadow .15s;
 }
-.geracao-campo button:hover { opacity: .88; }
+.geracao-campo button:hover { transform: translateY(-2px) scale(1.02); }
+.geracao-campo button:active { transform: none; }
 
 .geracao-resposta {
   margin: .9rem 0 0;
@@ -140,7 +164,8 @@ h1 {
   padding-top: .9rem;
   border-top: 1px solid var(--linha);
 }
-.geracao-resposta strong { color: var(--quente); }
+.geracao-resposta strong { color: var(--calor-forte); }
+@media (prefers-color-scheme: dark){ .geracao-resposta strong { color: var(--calor); } }
 .geracao-resposta .miudo { display: block; margin-top: .4rem; color: var(--tinta-fraca); }
 
 /* ---------- blocos ---------- */
@@ -148,12 +173,17 @@ h1 {
 .bloco { margin: 2.4rem 0; }
 
 .rotulo {
+  display: inline-block;
   margin: 0 0 .9rem;
-  font-size: .8rem;
-  letter-spacing: .08em;
+  font-size: .76rem;
+  letter-spacing: .09em;
   text-transform: uppercase;
-  color: var(--tinta-fraca);
-  font-weight: 600;
+  color: #fff;
+  font-weight: 700;
+  background: linear-gradient(100deg, var(--marca), var(--marca-clara));
+  padding: .36em .9em;
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
 .sub { margin: 2rem 0 .3rem; font-size: 1.05rem; }
@@ -171,11 +201,12 @@ h1 {
 
 .cartao {
   background: var(--papel-cartao);
-  border: 1px solid var(--linha);
+  border: 2px solid var(--linha);
   border-radius: var(--raio);
   padding: 1.1rem 1.2rem;
   box-shadow: var(--sombra);
 }
+.cartao-hoje { border-color: var(--calor); }
 
 .cartao-hoje { padding: 1.5rem 1.3rem; }
 
@@ -230,7 +261,7 @@ h1 {
   border-radius: 999px;
   margin-bottom: .5rem;
 }
-.selo-quente { background: var(--quente); color: #fff; }
+.selo-quente { background: linear-gradient(100deg, var(--calor-forte), var(--calor)); color: #fff; }
 .selo-seco   { background: var(--seco);   color: #fff; }
 .selo-frio   { background: var(--frio);   color: #fff; }
 .selo-fonte  { background: transparent; color: var(--tinta-fraca); border: 1px solid var(--linha); }
@@ -242,11 +273,11 @@ h1 {
 
 .g-eixo   { stroke: var(--linha); stroke-width: 1; }
 .g-rotulo { fill: var(--tinta-fraca); font-size: 10px; }
-.g-barra  { fill: var(--frio); opacity: .75; }
+.g-barra  { fill: var(--marca-clara); opacity: .8; }
 .g-barra-hoje { fill: var(--hoje); opacity: 1; }
-.g-barra-quente { fill: var(--quente); opacity: .8; }
-.g-linha  { fill: none; stroke: var(--seco); stroke-width: 2; }
-.g-tendencia { stroke: var(--quente); stroke-width: 2; stroke-dasharray: 5 4; fill: none; }
+.g-barra-quente { fill: var(--calor); opacity: .9; }
+.g-linha  { fill: none; stroke: var(--sol); stroke-width: 2.5; }
+.g-tendencia { stroke: var(--calor); stroke-width: 2.5; stroke-dasharray: 5 4; fill: none; }
 
 /* ---------- tendencias ---------- */
 
@@ -254,10 +285,15 @@ h1 {
 @media (max-width: 27rem) { .tendencias { grid-template-columns: 1fr; } }
 
 .tend {
-  border: 1px solid var(--linha);
-  border-radius: 10px;
-  padding: .7rem .8rem;
+  border: 2px solid var(--linha);
+  border-left-width: 7px;
+  border-radius: 12px;
+  padding: .75rem .9rem;
+  background: var(--papel-cartao);
 }
+.tend.sobe   { border-left-color: var(--calor); }
+.tend.desce  { border-left-color: var(--frio); }
+.tend.parado { border-left-color: var(--tinta-fraca); }
 /* A traducao vem primeiro e maior: o numero tecnico confirma, nao explica. */
 .tend .traducao {
   display: block;

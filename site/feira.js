@@ -143,28 +143,39 @@ function tela3(dados, hoje) {
     `Hoje é <span class="realce">${dia} de ${NOMES_MES[mes - 1]}</span>.<br>E nos outros anos?`;
 
   const porData = new Map(dados.dias.map((d) => [d.data, d]));
-  const colunas = [];
 
+  // monta primeiro os valores para poder escalar as barras entre si
+  const itens = [];
   for (const atras of [20, 10, 5]) {
     const alvoAno = `${ano - atras}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
     const d = porData.get(alvoAno);
     if (d && d.temp_max !== null) {
-      colunas.push(`<div class="col-ano">
-        <span class="quando">${atras} anos atrás</span>
-        <span class="valor">${br(d.temp_max)}°</span>
-        <span class="ano">${ano - atras}</span></div>`);
+      itens.push({ rotulo: `${atras} anos atrás`, valor: d.temp_max, ano: ano - atras });
     }
   }
-
   if (hoje) {
-    colunas.push(`<div class="col-ano hoje">
-      <span class="quando">Hoje</span>
-      <span class="valor">${br(hoje.temp_max)}°</span>
-      <span class="ano">${ano}${hoje.antigo ? " (sem rede)" : ""}</span></div>`);
+    itens.push({ rotulo: "Hoje", valor: hoje.temp_max, ano, hoje: true, antigo: hoje.antigo });
+  }
+  if (!itens.length) {
+    $("#f-comparativo").innerHTML = '<p class="carregando">Sem dado para esta data.</p>';
+    return;
   }
 
-  $("#f-comparativo").innerHTML = colunas.join("")
-    || '<p class="carregando">Sem dado para esta data.</p>';
+  // O cartao era um retangulo alto com o numero boiando no meio. A barra
+  // preenche essa altura E faz a comparacao virar visual: da para ver qual
+  // ano foi mais quente sem ler numero nenhum.
+  const valores = itens.map((i) => i.valor);
+  const piso = Math.floor(Math.min(...valores) - 4);
+  const teto = Math.ceil(Math.max(...valores) + 1);
+  const altura = (v) => Math.round(((v - piso) / (teto - piso)) * 100);
+
+  $("#f-comparativo").innerHTML = itens.map((i) => `
+    <div class="col-ano${i.hoje ? " hoje" : ""}">
+      <span class="quando">${i.rotulo}</span>
+      <span class="valor">${br(i.valor)}°</span>
+      <span class="barra-termo"><span class="barra-termo-cheio" style="height:${altura(i.valor)}%"></span></span>
+      <span class="ano">${i.ano}${i.antigo ? " · sem rede" : ""}</span>
+    </div>`).join("");
 }
 
 /** O ano inteiro como quadradinhos: 1 quadrado = 1 dia, vermelho = passou de
@@ -296,15 +307,22 @@ function tela5(dados) {
   const tRegiao = tendencia(regiao, "temp_max_media");
   const vezes = tRegiao > 0.01 ? tCidade / tRegiao : null;
 
+  // barra proporcional dentro de cada lado: o retangulo deixa de ser so
+  // numero solto e a diferenca fica visivel antes de ser lida
+  const maior = Math.max(tCidade, tRegiao);
+  const barra = (v) => `<span class="duelo-barra"><span style="width:${Math.round((v / maior) * 100)}%"></span></span>`;
+
   $("#f-duelo").innerHTML = `
     <div class="duelo-lado cidade">
       <span class="titulo">A estação dentro da cidade</span>
       <span class="valor">+${br(tCidade, 2)} °C</span>
+      ${barra(tCidade)}
       <span class="nota">a cada 10 anos</span>
     </div>
     <div class="duelo-lado">
       <span class="titulo">A região em volta</span>
       <span class="valor">+${br(tRegiao, 2)} °C</span>
+      ${barra(tRegiao)}
       <span class="nota">a cada 10 anos</span>
     </div>`;
 
