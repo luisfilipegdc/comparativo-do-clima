@@ -181,8 +181,12 @@ function gradeAno(dias, ano, rotulo) {
 
   const celulas = doAno.map((d, i) => {
     const col = Math.floor(i / linhas), lin = i % linhas;
-    const quente = d.temp_max !== null && d.temp_max > 30;
-    const classe = d.temp_max === null ? "gr-vazio" : quente ? "gr-quente" : "gr-ameno";
+    // tres niveis: o vermelho escuro marca os dias de calor extremo, e da
+    // textura a grade sem precisar de legenda extra
+    const classe = d.temp_max === null ? "gr-vazio"
+      : d.temp_max > 33 ? "gr-muito-quente"
+      : d.temp_max > 30 ? "gr-quente"
+      : "gr-ameno";
     return `<rect class="${classe}" x="${col * (lado + vao)}" y="${lin * (lado + vao) + 22}"
       width="${lado}" height="${lado}" rx="2.5"
       style="animation-delay:${(i * 1.6).toFixed(0)}ms"><title>${d.data}${
@@ -257,9 +261,10 @@ function tela4(dados) {
     $("#jogo-grafico").innerHTML =
       gradeAno(dados.dias, anoAntigo, `Um ano inteiro em ${anoAntigo}`)
       + gradeAno(dados.dias, anoRecente, `Um ano inteiro em ${anoRecente}`)
-      + `<p class="grade-legenda"><span class="amostra gr-quente"></span> passou de 30 °C
-         &nbsp;&nbsp;<span class="amostra gr-ameno"></span> não passou
-         &nbsp;&nbsp;<em>cada quadradinho é um dia</em></p>`;
+      + `<p class="grade-legenda"><span class="amostra gr-ameno"></span> dia normal
+         &nbsp;&nbsp;<span class="amostra gr-quente"></span> passou de 30 °C
+         &nbsp;&nbsp;<span class="amostra gr-muito-quente"></span> passou de 33 °C
+         &nbsp;&nbsp;<em>cada quadradinho é um dia do ano</em></p>`;
 
     $("#jogo-pergunta").hidden = true;
     $("#jogo-resposta").hidden = false;

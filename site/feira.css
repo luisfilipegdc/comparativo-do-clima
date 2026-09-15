@@ -2,26 +2,42 @@
    Pensada para notebook ligado na TV: tipo grande, alto contraste, uma ideia
    por tela. Tudo em clamp() para a mesma tela servir do notebook a TV grande. */
 
+/* ====================================================================
+   PALETA — troque só este bloco para vestir a apresentação com as cores
+   oficiais da escola. Os hexadecimais abaixo são uma paleta viva genérica,
+   NÃO são as cores oficiais do Marista: substitua pelos do manual de marca.
+   ==================================================================== */
 :root {
-  --tinta:        #16202c;
-  --tinta-fraca:  #5b6b7c;
-  --papel:        #fbfaf7;
+  --marca:        #0b4da2;   /* azul principal da escola */
+  --marca-clara:  #2f9fe8;   /* azul claro de apoio      */
+  --marca-escura: #06306a;   /* azul escuro de fundo     */
+
+  --calor:        #ff3d2e;   /* vermelho do calor  */
+  --calor-forte:  #d40f1f;
+  --sol:          #ffb020;   /* amarelo do sol     */
+  --frio:         #00a6ed;   /* azul do fresco     */
+  --verde:        #17c26a;   /* acerto / positivo  */
+
+  --tinta:        #12203a;
+  --tinta-fraca:  #5b6b84;
+  --papel:        #f7fbff;
   --papel-cartao: #ffffff;
-  --linha:        #e0ddd5;
-  --quente:       #d13b3b;
-  --frio:         #2f76a1;
-  --raio: 18px;
+  --linha:        #d9e4f0;
+  --quente:       var(--calor);
+  --raio: 20px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --tinta:        #f2f5f8;
-    --tinta-fraca:  #9fadbb;
-    --papel:        #11161b;
-    --papel-cartao: #1a2128;
-    --linha:        #2b333c;
-    --quente:       #ff6b6b;
-    --frio:         #6fb3d2;
+    --tinta:        #f2f7fc;
+    --tinta-fraca:  #9db0c7;
+    --papel:        #0a1526;
+    --papel-cartao: #132139;
+    --linha:        #24344f;
+    --calor:        #ff6146;
+    --sol:          #ffc34d;
+    --frio:         #45c2ff;
+    --marca-clara:  #59b6f5;
   }
 }
 
@@ -31,10 +47,24 @@ html, body { height: 100%; }
 
 body {
   margin: 0;
-  background: var(--papel);
   color: var(--tinta);
   font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   overflow: hidden;              /* a apresentacao nao rola: cada tela cabe */
+
+  /* fundo vivo que respira devagar - da vida sem competir com o conteudo */
+  background: var(--papel);
+  background:
+    radial-gradient(1100px 620px at 12% -10%, color-mix(in srgb, var(--marca-clara) 22%, transparent), transparent 60%),
+    radial-gradient(900px 560px at 92% 6%, color-mix(in srgb, var(--sol) 20%, transparent), transparent 62%),
+    radial-gradient(900px 700px at 70% 105%, color-mix(in srgb, var(--calor) 16%, transparent), transparent 60%),
+    var(--papel);
+  background-attachment: fixed;
+  animation: respirar 18s ease-in-out infinite alternate;
+}
+
+@keyframes respirar {
+  from { background-position: 0 0, 0 0, 0 0, 0 0; }
+  to   { background-position: 3% 2%, -3% 1%, 2% -2%, 0 0; }
 }
 
 /* ---------- palco e telas ---------- */
@@ -64,11 +94,15 @@ body {
 
 .etiqueta {
   margin: 0;
-  font-size: clamp(.75rem, 1.5vh, 1.05rem);
+  align-self: flex-start;
+  font-size: clamp(.7rem, 1.4vh, .95rem);
   letter-spacing: .1em;
   text-transform: uppercase;
-  color: var(--tinta-fraca);
-  font-weight: 600;
+  color: #fff;
+  font-weight: 700;
+  background: linear-gradient(100deg, var(--marca), var(--marca-clara));
+  padding: .38em .95em;
+  border-radius: 999px;
 }
 
 .gigante {
@@ -87,7 +121,13 @@ body {
   font-weight: 700;
 }
 
-.realce { color: var(--quente); }
+/* palavra-chave com gradiente quente, em vez de vermelho chapado */
+.realce {
+  background: linear-gradient(95deg, var(--sol), var(--calor) 55%, var(--calor-forte));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 
 .linha-grande {
   margin: 0;
@@ -121,18 +161,38 @@ body {
 
 .cartao-feira {
   background: var(--papel-cartao);
-  border: 1px solid var(--linha);
+  border: 2px solid var(--linha);
   border-radius: var(--raio);
   padding: clamp(.9rem, 2.4vh, 1.6rem);
+  box-shadow: 0 10px 24px -14px rgba(11, 77, 162, .55);
+  box-shadow: 0 10px 24px -14px color-mix(in srgb, var(--marca) 55%, transparent);
+  animation: subir .5s cubic-bezier(.2, .9, .3, 1.2) backwards;
+}
+/* os tres cartoes entram em sequencia, nao todos de uma vez */
+.cartao-feira:nth-child(1) { animation-delay: .06s; border-color: #8ec6ee; border-color: color-mix(in srgb, var(--marca-clara) 45%, var(--linha)); }
+.cartao-feira:nth-child(2) { animation-delay: .18s; border-color: #edd08a; border-color: color-mix(in srgb, var(--sol) 45%, var(--linha)); }
+.cartao-feira:nth-child(3) { animation-delay: .30s; border-color: #f0a79c; border-color: color-mix(in srgb, var(--calor) 45%, var(--linha)); }
+
+@keyframes subir {
+  from { opacity: 0; transform: translateY(18px) scale(.97); }
+  to   { opacity: 1; transform: none; }
 }
 
 .cartao-feira .numero {
   display: block;
   font-size: clamp(1.9rem, 6vh, 3.6rem);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -.03em;
   line-height: 1;
-  color: var(--quente);
+  color: var(--marca);
+}
+.cartao-feira:nth-child(2) .numero { color: #b57400; }
+.cartao-feira:nth-child(3) .numero { color: var(--calor-forte); }
+
+@media (prefers-color-scheme: dark) {
+  .cartao-feira .numero { color: var(--marca-clara); }
+  .cartao-feira:nth-child(2) .numero { color: var(--sol); }
+  .cartao-feira:nth-child(3) .numero { color: var(--calor); }
 }
 
 .cartao-feira .rotulo {
@@ -158,7 +218,14 @@ body {
   padding: clamp(.8rem, 2.2vh, 1.4rem);
   text-align: center;
 }
-.col-ano.hoje { border-color: var(--quente); border-width: 2px; }
+.col-ano { border-width: 2px; transition: transform .2s; }
+.col-ano.hoje {
+  border-color: var(--calor);
+  background: var(--papel-cartao);
+  background: linear-gradient(165deg, color-mix(in srgb, var(--calor) 12%, var(--papel-cartao)), var(--papel-cartao));
+  box-shadow: 0 12px 28px -16px var(--calor);
+  transform: scale(1.04);
+}
 
 .col-ano .quando {
   display: block;
@@ -176,7 +243,8 @@ body {
   letter-spacing: -.03em;
   line-height: 1;
 }
-.col-ano.hoje .valor { color: var(--quente); }
+.col-ano.hoje .valor { color: var(--calor-forte); }
+@media (prefers-color-scheme: dark){ .col-ano.hoje .valor { color: var(--calor); } }
 .col-ano .ano { display: block; margin-top: .3rem; font-size: clamp(.72rem, 1.5vh, .95rem); color: var(--tinta-fraca); }
 
 /* ---------- o jogo do chute ---------- */
@@ -207,7 +275,7 @@ body {
   color: var(--tinta);
   -moz-appearance: textfield;
 }
-.jogo-campo input:focus { outline: none; border-color: var(--quente); }
+.jogo-campo input:focus { outline: none; border-color: var(--marca-clara); box-shadow: 0 0 0 6px color-mix(in srgb, var(--marca-clara) 22%, transparent); }
 .jogo-campo input::-webkit-outer-spin-button,
 .jogo-campo input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
@@ -216,15 +284,18 @@ body {
 .jogo-campo button {
   font: inherit;
   font-size: clamp(.95rem, 2.2vh, 1.35rem);
-  font-weight: 600;
+  font-weight: 700;
   padding: clamp(.55rem, 1.6vh, .9rem) clamp(1rem, 2.5vw, 1.8rem);
   border: 0;
-  border-radius: 12px;
-  background: var(--tinta);
-  color: var(--papel);
+  border-radius: 999px;
+  background: linear-gradient(100deg, var(--marca), var(--marca-clara));
+  color: #fff;
   cursor: pointer;
+  box-shadow: 0 8px 20px -10px var(--marca);
+  transition: transform .15s, box-shadow .15s;
 }
-.jogo-campo button:hover { opacity: .88; }
+.jogo-campo button:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 14px 26px -12px var(--marca); }
+.jogo-campo button:active { transform: translateY(0) scale(.98); }
 
 .jogo-veredito {
   margin: 0 0 .4rem;
@@ -235,9 +306,16 @@ body {
 .jogo-numero {
   margin: 0;
   font-size: clamp(2.2rem, 7.5vh, 5rem);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -.035em;
   line-height: 1.05;
+}
+/* o numero revelado pulsa uma vez, no instante em que aparece */
+.jogo-numero .realce { animation: bater .7s cubic-bezier(.2, .9, .3, 1.4) .15s backwards; display: inline-block; }
+@keyframes bater {
+  0%   { transform: scale(.4); opacity: 0; }
+  60%  { transform: scale(1.18); opacity: 1; }
+  100% { transform: scale(1); }
 }
 .jogo-numero .seta { color: var(--tinta-fraca); margin: 0 .2em; }
 .jogo-unidade-grande { font-size: clamp(.9rem, 2.2vh, 1.4rem); font-weight: 400; color: var(--tinta-fraca); }
@@ -261,13 +339,19 @@ body {
 /* cada dia entra sozinho: o olho acompanha o vermelho aparecendo */
 .gr-quente, .gr-ameno, .gr-vazio {
   opacity: 0;
-  animation: surgir .32s ease-out forwards;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: surgir .34s cubic-bezier(.2, .9, .3, 1.5) forwards;
 }
-.gr-quente { fill: var(--quente); }
-.gr-ameno  { fill: var(--linha); }
+.gr-quente { fill: var(--calor); }
+.gr-muito-quente { fill: var(--calor-forte); }
+.gr-ameno  { fill: #bcd9ec; fill: color-mix(in srgb, var(--frio) 22%, var(--linha)); }
 .gr-vazio  { fill: transparent; stroke: var(--linha); stroke-dasharray: 2 2; }
 
-@keyframes surgir { to { opacity: 1; } }
+@keyframes surgir {
+  from { opacity: 0; transform: scale(.2); }
+  to   { opacity: 1; transform: scale(1); }
+}
 
 .grade-legenda {
   margin: .2rem 0 0;
@@ -279,12 +363,15 @@ body {
   vertical-align: -.05em; margin-right: .25em;
 }
 .grade-legenda .gr-quente { background: var(--quente); opacity: 1; animation: none; }
-.grade-legenda .gr-ameno  { background: var(--linha);  opacity: 1; animation: none; }
+.grade-legenda .gr-ameno  { background: #bcd9ec; background: color-mix(in srgb, var(--frio) 22%, var(--linha)); opacity: 1; animation: none; }
+.grade-legenda .gr-muito-quente { background: var(--calor-forte); opacity: 1; animation: none; }
 
 /* quem prefere menos movimento nao leva animacao nenhuma */
 @media (prefers-reduced-motion: reduce) {
-  .gr-quente, .gr-ameno, .gr-vazio { opacity: 1; animation: none; }
+  .gr-quente, .gr-ameno, .gr-vazio,
+  .cartao-feira, .jogo-numero .realce { opacity: 1; animation: none; transform: none; }
   .tela { animation: none; }
+  body { animation: none; }
 }
 
 /* ---------- duelo cidade x regiao ---------- */
@@ -297,10 +384,14 @@ body {
   border-radius: var(--raio);
   padding: clamp(.9rem, 2.4vh, 1.6rem);
 }
-.duelo-lado.cidade { border-color: var(--quente); border-width: 2px; }
+.duelo-lado { border-width: 2px; box-shadow: 0 10px 24px -16px var(--marca); background: var(--papel-cartao); }
+.duelo-lado.cidade { border-color: var(--calor); background: var(--papel-cartao); background: linear-gradient(160deg, color-mix(in srgb, var(--calor) 9%, var(--papel-cartao)), var(--papel-cartao)); }
+.duelo-lado:not(.cidade) { border-color: var(--frio); background: var(--papel-cartao); background: linear-gradient(160deg, color-mix(in srgb, var(--frio) 9%, var(--papel-cartao)), var(--papel-cartao)); }
 .duelo-lado .titulo { display: block; font-size: clamp(.85rem, 1.9vh, 1.15rem); font-weight: 600; }
 .duelo-lado .valor  { display: block; margin-top: .3rem; font-size: clamp(1.8rem, 5.5vh, 3.2rem); font-weight: 700; letter-spacing: -.03em; line-height: 1; }
-.duelo-lado.cidade .valor { color: var(--quente); }
+.duelo-lado.cidade .valor { color: var(--calor-forte); }
+.duelo-lado:not(.cidade) .valor { color: var(--marca); }
+@media (prefers-color-scheme: dark){ .duelo-lado.cidade .valor{color:var(--calor);} .duelo-lado:not(.cidade) .valor{color:var(--frio);} }
 .duelo-lado .nota   { display: block; margin-top: .45rem; font-size: clamp(.78rem, 1.6vh, 1rem); color: var(--tinta-fraca); line-height: 1.35; }
 
 /* ---------- conclusoes ---------- */
@@ -312,7 +403,9 @@ body {
   line-height: 1.5;
 }
 .conclusoes li { margin-bottom: .5em; }
-.conclusoes b { color: var(--quente); }
+.conclusoes b { color: var(--calor-forte); }
+.conclusoes li::marker { color: var(--marca-clara); }
+@media (prefers-color-scheme: dark){ .conclusoes b { color: var(--calor); } }
 
 /* ---------- controles ---------- */
 
