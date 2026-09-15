@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feira de Ciências — O clima de Brasília mudou?</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="feira.css">
+</head>
+<body>
+
+<div class="palco" id="palco">
+
+  <!-- 1 -------------------------------------------------- abertura -->
+  <section class="tela" data-aluno="1" data-titulo="Abertura">
+    <p class="etiqueta">Feira de Ciências</p>
+    <h1 class="gigante">O clima de Brasília<br><span class="realce">mudou?</span></h1>
+    <p class="linha-grande">
+      A gente foi atrás de <b id="total-dias">9.558</b> dias de temperatura medidos
+      pela estação do INMET aqui em Brasília, desde o ano <b>2000</b>.
+    </p>
+    <p class="dica">Use as setas ← → para avançar</p>
+  </section>
+
+  <!-- 2 -------------------------------------------------- o dado -->
+  <section class="tela" data-aluno="2" data-titulo="De onde vem o dado">
+    <p class="etiqueta">Passo 1 · De onde vem o número</p>
+    <h2 class="grande">Não somos nós que medimos.<br>É uma estação do governo.</h2>
+    <div class="cartoes-feira">
+      <div class="cartao-feira">
+        <span class="numero" id="f-estacao">A001</span>
+        <span class="rotulo">a estação automática de Brasília, ligada desde 2000</span>
+      </div>
+      <div class="cartao-feira">
+        <span class="numero" id="f-dias">9.558</span>
+        <span class="rotulo">dias medidos, de hora em hora</span>
+      </div>
+      <div class="cartao-feira">
+        <span class="numero" id="f-anos">26</span>
+        <span class="rotulo">anos de história guardada</span>
+      </div>
+    </div>
+    <p class="rodape-tela">Fonte: INMET · Portal Brasileiro de Dados Abertos — qualquer um pode baixar.</p>
+  </section>
+
+  <!-- 3 -------------------------------------------------- hoje x passado -->
+  <section class="tela" data-aluno="3" data-titulo="Hoje e o passado">
+    <p class="etiqueta">Passo 2 · O mesmo dia, outros anos</p>
+    <h2 class="grande" id="f-data-hoje">Hoje</h2>
+    <div class="comparativo-feira" id="f-comparativo">
+      <p class="carregando">Buscando…</p>
+    </div>
+    <p class="rodape-tela">Um dia só não prova nada — por isso a gente olhou todos.</p>
+  </section>
+
+  <!-- 4 -------------------------------------------------- o jogo -->
+  <section class="tela tela-jogo" data-aluno="4" data-titulo="O jogo do chute">
+    <p class="etiqueta">Passo 3 · Chute antes de ver</p>
+    <h2 class="grande">Quantos dias por ano passam<br>de <span class="realce">30 °C</span> em Brasília?</h2>
+
+    <div class="jogo" id="jogo-pergunta">
+      <p class="jogo-instrucao">Nos anos 2000 eram <b id="jogo-antes">29</b> dias.
+        E hoje? Arrisque:</p>
+      <div class="jogo-campo">
+        <input type="number" id="jogo-palpite" inputmode="numeric" min="0" max="365" placeholder="?">
+        <span class="jogo-unidade">dias</span>
+        <button type="button" id="jogo-botao">Ver a resposta</button>
+      </div>
+    </div>
+
+    <div class="jogo-resposta" id="jogo-resposta" hidden>
+      <p class="jogo-veredito" id="jogo-veredito"></p>
+      <p class="jogo-numero"><b id="jogo-antes2">29</b> <span class="seta">→</span>
+        <b class="realce" id="jogo-depois">57</b> <span class="jogo-unidade-grande">dias por ano</span></p>
+      <p class="jogo-traducao">De <b>1 mês</b> de calor por ano para <b>2 meses</b>.</p>
+      <div id="jogo-grafico" class="grafico-feira"></div>
+    </div>
+  </section>
+
+  <!-- 5 -------------------------------------------------- cidade x regiao -->
+  <section class="tela" data-aluno="5" data-titulo="A cidade e a região">
+    <p class="etiqueta">Passo 4 · "Mas não é só a cidade esquentando?"</p>
+    <h2 class="grande">Essa pergunta é boa.<br>A gente foi checar.</h2>
+    <div class="duelo" id="f-duelo">
+      <p class="carregando">Calculando…</p>
+    </div>
+    <p class="rodape-tela" id="f-duelo-nota"></p>
+  </section>
+
+  <!-- 6 -------------------------------------------------- fechamento -->
+  <section class="tela" data-aluno="6" data-titulo="O que isso significa">
+    <p class="etiqueta">Passo 5 · E daí?</p>
+    <h2 class="grande">O que a gente descobriu</h2>
+    <ul class="conclusoes">
+      <li><b>Os dias esquentaram</b> — e os dias de muito calor <b>dobraram</b>.</li>
+      <li><b>As noites quase não mudaram.</b> A gente achou que tinham mudado; o dado disse que não.</li>
+      <li><b>Parte é a cidade</b> crescendo em cima do termômetro, parte é o planeta inteiro esquentando.</li>
+    </ul>
+    <p class="linha-grande destaque-final">
+      A gente não escolheu os números que ajudavam.<br>
+      <b>Mostramos também o que derruba a nossa ideia.</b>
+    </p>
+    <p class="rodape-tela">Tudo isto está em comparativo-do-clima.vercel.app · dados do INMET e ERA5</p>
+  </section>
+
+</div>
+
+<nav class="controles" aria-label="Navegação da apresentação">
+  <button type="button" id="anterior" aria-label="Tela anterior">←</button>
+  <span class="contador"><b id="atual">1</b> / <span id="total">6</span></span>
+  <button type="button" id="proximo" aria-label="Próxima tela">→</button>
+  <button type="button" id="tela-cheia" class="secundario" title="Tela cheia (F)">⛶</button>
+</nav>
+
+<script src="feira.js"></script>
+</body>
+</html>

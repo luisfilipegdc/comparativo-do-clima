@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roteiro dos apresentadores — Feira de Ciências</title>
+<meta name="robots" content="noindex">
+<style>
+/* Folha para imprimir: uma ficha por aluno, cada uma em sua pagina.
+   Os numeros sao lidos do mesmo arquivo que a apresentacao usa - ficha e tela
+   nunca podem discordar. */
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 1.5rem;
+  font: 15px/1.55 Georgia, "Times New Roman", serif;
+  color: #16202c; background: #f6f5f2;
+}
+.folha {
+  max-width: 21cm; margin: 0 auto 1.2rem; padding: 1.8cm;
+  background: #fff; border: 1px solid #ddd9d2; border-radius: 6px;
+}
+.cabecalho { border-bottom: 2px solid #16202c; padding-bottom: .6rem; margin-bottom: 1.2rem; }
+.projeto { font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; color: #6b7785; margin: 0; }
+h1 { font-size: 1.5rem; margin: .3rem 0 0; }
+.papel { font-size: .95rem; color: #6b7785; margin: .2rem 0 0; }
+h2 { font-size: 1.05rem; margin: 1.4rem 0 .4rem; text-transform: uppercase; letter-spacing: .05em; font-size: .82rem; color: #6b7785; }
+.fala {
+  font-size: 1.12rem; line-height: 1.6;
+  border-left: 3px solid #d13b3b; padding-left: .9rem; margin: 0;
+}
+.fala em { color: #6b7785; font-size: .92rem; }
+.numeros { margin: .5rem 0 0; padding: 0; list-style: none; }
+.numeros li { padding: .35rem 0; border-bottom: 1px dotted #ddd9d2; display: flex; justify-content: space-between; gap: 1rem; }
+.numeros b { font-family: system-ui, sans-serif; }
+.aviso { background: #fdf3f3; border: 1px solid #f0d5d5; border-radius: 6px; padding: .8rem 1rem; font-size: .95rem; margin-top: 1rem; }
+.duvida { margin: 1rem 0 0; }
+.duvida p { margin: .2rem 0 .8rem; }
+.pergunta { font-weight: bold; }
+.instrucao { font-size: .85rem; color: #6b7785; text-align: center; margin: 0 auto 1.2rem; max-width: 21cm; }
+@media print {
+  body { background: #fff; padding: 0; }
+  .folha { border: 0; border-radius: 0; margin: 0; page-break-after: always; max-width: none; }
+  .instrucao { display: none; }
+}
+</style>
+</head>
+<body>
+
+<p class="instrucao">
+  Seis fichas, uma por aluno. Imprima duas vezes — uma para cada grupo.
+  No navegador: Ctrl+P → cada ficha sai em uma folha.
+</p>
+
+<div id="fichas"><p class="instrucao">Montando as fichas com os dados…</p></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const br = (v, c = 1) => v.toLocaleString("pt-BR", { minimumFractionDigits: c, maximumFractionDigits: c });
+
+function tendencia(pontos, campo) {
+  const xs = pontos.map(p => p.ano), ys = pontos.map(p => Number(p[campo]));
+  const mx = xs.reduce((a,b)=>a+b,0)/xs.length, my = ys.reduce((a,b)=>a+b,0)/ys.length;
+  return xs.reduce((s,x,i)=>s+(x-mx)*(ys[i]-my),0) / xs.reduce((s,x)=>s+(x-mx)**2,0) * 10;
+}
+
+function ficha(n, papel, fala, numeros, extra) {
+  return `<section class="folha">
+    <div class="cabecalho">
+      <p class="projeto">Feira de Ciências · O clima de Brasília mudou?</p>
+      <h1>Aluno ${n}</h1>
+      <p class="papel">Tela ${n} — ${papel}</p>
+    </div>
+    <h2>O que falar</h2>
+    <p class="fala">${fala}</p>
+    ${numeros ? `<h2>Os seus números</h2><ul class="numeros">${numeros}</ul>` : ""}
+    ${extra || ""}
+  </section>`;
+}
+
+async function montar() {
+  const serie = await (await fetch("dados/serie.json")).json();
+  const era5 = await (await fetch("dados/era5.json")).json().catch(() => null);
+
+  const completos = serie.resumo.filter(d => d.dias >= 300);
+  const n = 10;
+  const med = l => l.reduce((s,d)=>s+d.dias_acima_30,0)/l.length;
+  const antes = Math.round(med(completos.slice(0, n)));
+  const depois = Math.round(med(completos.slice(-n)));
+  const de = completos[0].ano, ate = completos[completos.length-1].ano;
+
+  const tCidade = tendencia(completos, "temp_max_media");
+  const tMin = tendencia(completos, "temp_min_media");
+  const regiao = era5 ? era5.resumo.filter(a => a.dias >= 350 && a.ano >= de && a.ano <= ate) : [];
+  const tRegiao = regiao.length ? tendencia(regiao, "temp_max_media") : null;
+  const vezes = tRegiao ? tCidade / tRegiao : null;
+
+  const era5Completos = era5 ? era5.resumo.filter(a => a.dias >= 350) : [];
+  const medMax = l => l.reduce((s,a)=>s+a.temp_max_media,0)/l.length;
+  const salto = era5Completos.length >= 40
+    ? medMax(era5Completos.slice(-10)) - medMax(era5Completos.slice(0, 30)) : null;
+
+  const num = (rot, val) => `<li><span>${rot}</span><b>${val}</b></li>`;
+
+  const fichas = [
+    ficha(1, "Abertura",
+      `Oi! A gente quis saber uma coisa: <strong>o clima de Brasília mudou?</strong>
+       Todo mundo fala que está mais quente, mas a gente não quis ficar no achismo.
+       Então fomos atrás de <strong>${br(serie.dias.length,0)} dias</strong> de temperatura
+       medidos de verdade, aqui em Brasília, desde o ano 2000.
+       <em>(Aponte para a tela e passe para o colega.)</em>`,
+      num("Dias analisados", br(serie.dias.length,0)) + num("Desde", "2000")),
+
+    ficha(2, "De onde vem o dado",
+      `Esses números não fomos nós que medimos — a gente não teria como.
+       Quem mede é o <strong>INMET</strong>, o instituto de meteorologia do governo.
+       Existe uma estação automática aqui em Brasília, a <strong>A001</strong>, que mede
+       a temperatura <strong>de hora em hora, desde o ano 2000</strong>.
+       Qualquer pessoa pode baixar esses dados de graça — foi o que a gente fez.
+       <em>(Se perguntarem: está tudo no Portal Brasileiro de Dados Abertos.)</em>`,
+      num("Estação", "A001 — Brasília") + num("Funciona desde", "07/05/2000") +
+      num("Dias com medição", br(serie.dias.length,0))),
+
+    ficha(3, "Hoje e o passado",
+      `Agora olha só: esta é a temperatura de <strong>hoje</strong>. E estas são as
+       temperaturas <strong>no mesmo dia</strong>, há 5, 10 e 20 anos.
+       Repara que não é sempre que hoje é o mais quente — tem dia que era mais quente
+       antes! <strong>Um dia sozinho não prova nada.</strong> Por isso a gente não
+       olhou um dia: olhou todos.
+       <em>(Esta fala é importante — é ela que prepara a próxima tela.)</em>`,
+      num("Dias comparados", br(serie.dias.length,0)) +
+      num("Anos na série", `${de} a ${ate}`)),
+
+    ficha(4, "O jogo do chute",
+      `Deixa eu te fazer uma pergunta. Em Brasília, <strong>quantos dias por ano</strong>
+       passam de 30 graus? Nos anos 2000 eram <strong>${antes} dias</strong>.
+       E hoje, quanto você acha? <em>(Espere a pessoa chutar. Não dê a resposta antes!)</em>
+       <br><br>São <strong>${depois} dias</strong>. Praticamente
+       <strong>o dobro</strong>: de mais ou menos um mês de calor por ano para dois meses.`,
+      num("Antes (média dos anos 2000)", `${antes} dias`) +
+      num("Hoje (média da última década)", `${depois} dias`) +
+      num("Diferença", `+${depois - antes} dias por ano`),
+      `<div class="aviso"><strong>Segredo desta tela:</strong> deixe a pessoa chutar
+       <em>antes</em> de mostrar. Quem erra o próprio chute lembra do número;
+       quem só escuta, esquece na próxima banca.</div>`),
+
+    ficha(5, "A cidade e a região",
+      `Aí alguém sempre pergunta: <strong>"mas não é só a cidade que esquentou?"</strong>
+       É uma ótima pergunta, e a gente foi checar.
+       O termômetro dentro da cidade subiu <strong>${br(tCidade,2)} grau a cada 10 anos</strong>.
+       A região em volta de Brasília subiu <strong>${tRegiao ? br(tRegiao,2) : "—"}</strong>.
+       Ou seja: a cidade esquenta mais rápido, por causa do asfalto e dos prédios —
+       <strong>mas a região também está esquentando</strong>. Essa parte não é a cidade:
+       <strong>é o planeta</strong>.`,
+      num("Estação na cidade", `+${br(tCidade,2)} °C por década`) +
+      (tRegiao ? num("Região em volta", `+${br(tRegiao,2)} °C por década`) : "") +
+      (vezes ? num("A cidade esquenta", `${br(vezes,1)}× mais rápido`) : "") +
+      (salto ? num("Desde os anos 1940", `+${br(salto,1)} °C na região`) : ""),
+      `<div class="aviso"><strong>Importante:</strong> comparamos os <em>mesmos anos</em>
+       (${de}–${ate}) dos dois lados. Se comparássemos 25 anos da cidade com 86 da região,
+       a diferença pareceria muito maior do que é.</div>`),
+
+    ficha(6, "O que isso significa",
+      `Resumindo o que a gente descobriu: os <strong>dias esquentaram</strong> e os dias
+       de muito calor <strong>dobraram</strong>. As <strong>noites quase não mudaram</strong> —
+       a gente achava que tinham mudado, e o dado disse que não.
+       E o <strong>ar ficou mais seco</strong>.
+       <br><br>A parte que a gente mais gosta: <strong>a gente não escolheu só os números
+       que ajudavam</strong>. Mostramos também o que derruba a nossa ideia. Ciência é isso.`,
+      num("Máxima", `+${br(tCidade,2)} °C por década`) +
+      num("Mínima (noites)", `${tMin >= 0 ? "+" : "−"}${br(Math.abs(tMin),2)} °C por década`) +
+      num("Dias de calor", `${antes} → ${depois} por ano`),
+      `<div class="duvida">
+        <h2>Se o jurado perguntar</h2>
+        <p class="pergunta">"Isso não é só ilha de calor urbana?"</p>
+        <p>Em parte é, e a gente mediu: a cidade esquenta
+          ${vezes ? br(vezes,1) + "×" : "mais"} mais rápido que a região. Mas a região,
+          onde não tem asfalto, <strong>também esquentou</strong>.</p>
+        <p class="pergunta">"25 anos não é pouco para falar de clima?"</p>
+        <p>É pouco, sim. Por isso a gente também mostrou a série desde
+          <strong>1940</strong>, de outra fonte${salto ? `, que subiu ${br(salto,1)} °C` : ""}.</p>
+        <p class="pergunta">"De onde vieram esses dados?"</p>
+        <p>Estação A001 do INMET, baixada do Portal Brasileiro de Dados Abertos.
+          A série longa é do ERA5, um modelo europeu, e a gente deixou as duas
+          <strong>separadas</strong> porque uma é termômetro e a outra é cálculo.</p>
+      </div>`),
+  ];
+
+  $("#fichas").innerHTML = fichas.join("");
+}
+
+montar().catch(e => { $("#fichas").innerHTML = `<p class="instrucao">Erro ao montar: ${e.message}</p>`; });
+</script>
+</body>
+</html>
