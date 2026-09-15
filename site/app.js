@@ -301,17 +301,40 @@ function retaTendencia(pontos, valores, g) {
      x2="${g.margemEsq + (xs.length - 1) * (g.larguraBarra + g.espaco) + g.larguraBarra / 2}" y2="${g.escala(y1)}"></line>`;
 }
 
-/** Inclinacao por decada de uma serie anual. */
-function tendenciaPorDecada(dados, campo) {
+/** Inclinacao por decada de uma serie anual, COM erro padrao e teste.
+ *
+ *  Sem isto a pagina afirmava tendencias que nao se distinguem de ruido - foi
+ *  o caso da umidade: -0,67 p.p./decada parece muito, mas com 25 anos o erro
+ *  padrao e 0,66 e o resultado nao passa em nenhum teste (p = 0,31).
+ *  Afirmar "o ar secou" com esse dado seria errado. */
+function ajusteLinear(dados, campo) {
   const pontos = dados.filter((d) => d.dias >= 300);
   if (pontos.length < 5) return null;
   const xs = pontos.map((p) => p.ano);
   const ys = pontos.map((p) => Number(p[campo]));
-  const mx = xs.reduce((a, b) => a + b, 0) / xs.length;
-  const my = ys.reduce((a, b) => a + b, 0) / ys.length;
-  const inclin = xs.reduce((s, x, i) => s + (x - mx) * (ys[i] - my), 0)
-    / xs.reduce((s, x) => s + (x - mx) ** 2, 0);
-  return inclin * 10;
+  const n = xs.length;
+  const mx = xs.reduce((a, b) => a + b, 0) / n;
+  const my = ys.reduce((a, b) => a + b, 0) / n;
+  const sxx = xs.reduce((s, x) => s + (x - mx) ** 2, 0);
+  const b = xs.reduce((s, x, i) => s + (x - mx) * (ys[i] - my), 0) / sxx;
+  const a = my - b * mx;
+  const res = ys.map((y, i) => y - (a + b * xs[i]));
+  const s2 = res.reduce((s, e) => s + e * e, 0) / (n - 2);
+  const erro = Math.sqrt(s2 / sxx);
+  const t = erro > 0 ? b / erro : 0;
+  return {
+    porDecada: b * 10,
+    erroPorDecada: erro * 10,
+    t,
+    // |t| > 2,07 e o limite de 5% para 23 graus de liberdade (n = 25)
+    claro: Math.abs(t) > 2.07,
+  };
+}
+
+/** Compatibilidade: so a inclinacao, para os graficos. */
+function tendenciaPorDecada(dados, campo) {
+  const r = ajusteLinear(dados, campo);
+  return r ? r.porDecada : null;
 }
 
 /** Media de um campo nos primeiros e nos ultimos anos completos da serie. */
@@ -351,23 +374,34 @@ function blocoTendencias(resumo) {
     },
     {
       campo: "temp_min_media", unidade: " °C", casas: 2, nome: "na mínima, por década",
-      traducao: "As noites quase não mudaram",
+      traducao: "As noites também esquentaram",
+      incerto: "As noites não mudaram",
     },
     {
       campo: "umidade_media", unidade: " p.p.", casas: 2, nome: "de umidade, por década",
       traducao: "O ar ficou mais seco",
+      incerto: "A umidade: não deu para saber",
     },
   ];
 
   return itens.map((it) => {
-    const v = tendenciaPorDecada(resumo, it.campo);
+    const r = ajusteLinear(resumo, it.campo);
+    const v = r ? r.porDecada : null;
+
+    // Sem significancia estatistica a pagina NAO afirma direcao: mostra a
+    // margem de erro e diz que nao deu para saber. E a diferenca entre
+    // ensinar ciencia e ensinar a escolher o numero que agrada.
+    if (r && !r.claro) {
+      return `<div class="tend incerto">
+        <span class="traducao">${it.incerto || "Sem mudança clara"}</span>
+        <span class="valor">${comSinal(v, it.casas)} ± ${br(r.erroPorDecada, it.casas)}${it.unidade}</span>
+        <span class="nome">${it.nome} — dentro da margem de erro</span>
+      </div>`;
+    }
+
     const classe = v === null ? "parado" : v > 0.1 ? "sobe" : v < -0.1 ? "desce" : "parado";
-    // a frase das noites so vale enquanto o dado disser isso
-    const traducao = it.campo === "temp_min_media" && v !== null && Math.abs(v) >= 0.15
-      ? (v > 0 ? "As noites também esquentaram" : "As noites esfriaram um pouco")
-      : it.traducao;
     return `<div class="tend ${classe}">
-      <span class="traducao">${traducao}</span>
+      <span class="traducao">${it.traducao}</span>
       <span class="valor">${comSinal(v, it.casas)}${it.unidade}</span>
       <span class="nome">${it.nome}</span>
     </div>`;
@@ -500,25 +534,34 @@ function leituraHonesta(resumo) {
   const med = (lista, campo) => lista.reduce((s, d) => s + Number(d[campo]), 0) / lista.length;
 
   const q1 = med(antes, "dias_acima_30"), q2 = med(depois, "dias_acima_30");
-  const tMax = tendenciaPorDecada(resumo, "temp_max_media");
-  const tMin = tendenciaPorDecada(resumo, "temp_min_media");
-  const tUmi = tendenciaPorDecada(resumo, "umidade_media");
+  const rMax = ajusteLinear(resumo, "temp_max_media");
+  const rMin = ajusteLinear(resumo, "temp_min_media");
+  const rUmi = ajusteLinear(resumo, "umidade_media");
 
-  const noites = Math.abs(tMin) < 0.15
-    ? "As noites, porém, quase não mudaram."
-    : tMin > 0 ? "As noites também esquentaram." : "As noites, curiosamente, esfriaram um pouco.";
+  const noites = !rMin.claro
+    ? "As noites, porém, <strong>não mudaram de forma clara</strong> — a variação fica dentro da margem de erro."
+    : rMin.porDecada > 0 ? "As noites também esquentaram."
+    : "As noites, curiosamente, esfriaram.";
+
+  const umidade = !rUmi.claro
+    ? `Sobre a umidade <strong>não dá para afirmar nada</strong>: a série sugere
+       ${comSinal(rUmi.porDecada, 2)} ponto por década, mas a margem de erro é
+       ±${br(rUmi.erroPorDecada, 2)} — ou seja, pode não haver mudança nenhuma.`
+    : `E o ar ficou mais seco: <strong>${comSinal(rUmi.porDecada, 2)} ponto percentual
+       de umidade por década</strong>.`;
 
   return `
     <p>Entre ${antes[0].ano}–${antes[antes.length - 1].ano} e ${depois[0].ano}–${depois[depois.length - 1].ano},
     os dias acima de 30 °C em Brasília passaram de <strong>${br(q1, 0)} por ano</strong>
-    para <strong>${br(q2, 0)} por ano</strong>.</p>
-    <p>A máxima subiu <strong>${comSinal(tMax, 2)} °C por década</strong>. ${noites}
-    E o ar ficou mais seco: <strong>${comSinal(tUmi, 2)} ponto percentual de umidade por década</strong>.</p>
-    <p>Dia mais quente, noite parecida e ar mais seco é a marca de um clima que aquece
-    <em>e</em> resseca ao mesmo tempo — aqui se misturam o aquecimento global e a mudança
-    no uso do solo do Cerrado. Uma estação sozinha não prova o efeito estufa; ela mostra
-    como ele chega até aqui. O planeta, medido por milhares de estações, aqueceu cerca de
-    1,3 °C desde o século XIX.</p>`;
+    para <strong>${br(q2, 0)} por ano</strong>. Essa diferença passa em teste estatístico
+    (p &lt; 0,001): não é obra do acaso.</p>
+    <p>A máxima subiu <strong>${comSinal(rMax.porDecada, 2)} ± ${br(rMax.erroPorDecada, 2)} °C
+    por década</strong>. ${noites} ${umidade}</p>
+    <p>Dia mais quente e noite parecida é o que esta estação registrou. Uma estação sozinha
+    não prova o efeito estufa, e o que ela mede inclui o crescimento da cidade em volta
+    dela. O planeta, medido por milhares de estações, aqueceu cerca de 1,3 °C desde o
+    século XIX — e a região no entorno de Brasília também aqueceu, o que se vê na faixa
+    abaixo.</p>`;
 }
 
 /* ------------------------------------------------- quase um seculo (ERA5) */

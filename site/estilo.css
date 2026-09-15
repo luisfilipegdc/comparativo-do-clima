@@ -294,6 +294,11 @@ h1 {
 .tend.sobe   { border-left-color: var(--calor); }
 .tend.desce  { border-left-color: var(--frio); }
 .tend.parado { border-left-color: var(--tinta-fraca); }
+/* tendencia dentro da margem de erro: cinza e tracejada, para nao parecer
+   uma descoberta */
+.tend.incerto { border-left-color: var(--tinta-fraca); border-left-style: dashed; }
+.tend.incerto .valor { color: var(--tinta-fraca); font-size: .95rem; }
+.tend.incerto .traducao { color: var(--tinta-fraca); }
 /* A traducao vem primeiro e maior: o numero tecnico confirma, nao explica. */
 .tend .traducao {
   display: block;

@@ -179,9 +179,9 @@ async function montar() {
 
     ficha(6, "O que isso significa",
       `Resumindo o que a gente descobriu: os <strong>dias esquentaram</strong> e os dias
-       de muito calor <strong>dobraram</strong>. As <strong>noites quase não mudaram</strong> —
-       a gente achava que tinham mudado, e o dado disse que não.
-       E o <strong>ar ficou mais seco</strong>.
+       de muito calor <strong>dobraram</strong> — e isso passou em teste estatístico.
+       Já as <strong>noites</strong> e a <strong>umidade</strong> mudaram tão pouco que
+       <strong>não dá para afirmar nada</strong>: a variação cabe dentro da margem de erro.
        <br><br>A parte que a gente mais gosta: <strong>a gente não escolheu só os números
        que ajudavam</strong>. Mostramos também o que derruba a nossa ideia. Ciência é isso.`,
       num("Máxima", `+${br(tCidade,2)} °C por década`) +
@@ -193,6 +193,10 @@ async function montar() {
         <p>Em parte é, e a gente mediu: a cidade esquenta
           ${vezes ? br(vezes,1) + "×" : "mais"} mais rápido que a região. Mas a região,
           onde não tem asfalto, <strong>também esquentou</strong>.</p>
+        <p class="pergunta">"Vocês testaram se isso não é só coincidência?"</p>
+        <p>Testamos. A subida da máxima e o aumento dos dias de calor passam em
+          teste estatístico (p &lt; 0,001). Já a umidade e as noites <strong>não
+          passam</strong> — por isso a gente não afirma nada sobre elas.</p>
         <p class="pergunta">"25 anos não é pouco para falar de clima?"</p>
         <p>É pouco, sim. Por isso a gente também mostrou a série desde
           <strong>1940</strong>, de outra fonte${salto ? `, que subiu ${br(salto,1)} °C` : ""}.</p>

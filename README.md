@@ -18,13 +18,21 @@ externa. Os gráficos são SVG gerado à mão.
 
 ## O que a série mostra (2001–2025)
 
-| Indicador | Tendência por década |
-|---|---|
-| Máxima | **+0,52 °C** |
-| Média | +0,24 °C |
-| Mínima (noites) | −0,08 °C — sem aquecimento |
-| Dias acima de 30 °C | **+21 dias** |
-| Umidade média | −0,66 p.p. |
+| Indicador | Tendência por década | Significância (n=25) |
+|---|---|---|
+| Dias acima de 30 °C | **+20,7 ± 4,3 dias** | p < 0,001 ✅ |
+| Máxima | **+0,52 ± 0,11 °C** | p < 0,001 ✅ |
+| Média | +0,24 ± 0,09 °C | p = 0,004 ✅ |
+| Mínima (noites) | −0,08 ± 0,07 °C | p = 0,26 — **não significativo** |
+| Umidade média | −0,67 ± 0,66 p.p. | p = 0,31 — **não significativo** |
+
+Regressão linear sobre médias anuais, anos completos de 2001 a 2025.
+Autocorrelação lag-1 dos resíduos: +0,02 (máxima) e −0,18 (dias quentes) —
+sem memória que inflasse os testes.
+
+**A umidade e as noites não passam em teste.** O site diz isso com essas
+palavras e mostra a margem de erro, em vez de afirmar uma direção que o dado
+não sustenta.
 
 Os dias acima de 30 °C **dobraram**: de 29 por ano nos anos 2000 para 57 por
 ano na última década.
@@ -36,10 +44,23 @@ a cidade em 25 anos contra a região em 86 exageraria a diferença. Olhando bem
 mais para trás, a máxima do ponto de Brasília subiu **+1,0 °C** de 1940–1969
 para 2016–2025.
 
-Dia mais quente, noite parecida e ar mais seco é a assinatura de um clima que
-aquece *e* resseca — aqui se somam o aquecimento global e a mudança no uso do
-solo do Cerrado. Uma estação sozinha não prova o efeito estufa; ela mostra como
-ele chega até Brasília. O site diz isso com essas palavras, de propósito.
+Uma estação sozinha não prova o efeito estufa, e o que ela mede inclui o
+crescimento da cidade em volta dela. O site diz isso com essas palavras, de
+propósito.
+
+## Limitações conhecidas
+
+- **Série curta.** 25 anos é pouco para clima; por isso existe a camada ERA5
+  desde 1940 (+0,131 ± 0,027 °C/década, p < 0,000001).
+- **Dados não homogeneizados.** São as leituras brutas do INMET. Mudança de
+  sensor, manutenção ou alteração no entorno da estação não foram corrigidas —
+  não há metadados públicos para isso.
+- **A "região" do ERA5 não é rural.** A grade de ~30 km inclui a própria
+  cidade, então a diferença cidade × região é um **piso** do efeito urbano,
+  não a medida dele.
+- **Efeito de borda na conversão de fuso.** A temperatura máxima horária do
+  INMET cobre a hora anterior; na primeira hora do dia local uma fração
+  pertence ao dia anterior. O efeito é de minutos por dia.
 
 ## Estrutura
 
