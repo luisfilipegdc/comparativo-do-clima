@@ -10,7 +10,11 @@ const CONFIG = {
   lon: -47.93,
   fuso: "America/Sao_Paulo",
   anoInicial: 2000,
-  anosAtras: [1, 5, 10, 20],   // os cartoes de comparacao
+  // Do maior contraste para o menor: um ano de diferenca e ruido do tempo e
+  // sempre parece "igual"; vinte anos e onde a mudanca aparece. Abrir pelo
+  // cartao de 1 ano fazia a pagina comecar provando que nada mudou.
+  anosAtras: [20, 10, 5, 1],
+  janelaMedia: 5,              // media movel para suavizar ano atipico
   janela: 3,                   // dias de tolerancia quando falta o dia exato
 };
 
@@ -163,12 +167,17 @@ function cartaoHoje(hoje) {
     <p class="nota">Hoje vem da Open-Meteo. O INMET publica os dados da A001 com semanas de atraso.</p>`;
 }
 
-function cartaoPassado(anosAtras, achado, hoje) {
+function cartaoPassado(anosAtras, achado, hoje, serieCarregada) {
   if (!achado) {
+    // "sem dado" faz o aluno concluir que o site quebrou, e essa e a impressao
+    // que fica. O estado vazio precisa dizer o que de fato esta acontecendo.
+    const explicacao = serieCarregada
+      ? "A estação não mediu neste dia"
+      : "Série histórica ainda sendo carregada no banco";
     return `<article class="cartao">
       <p class="quando">${anosAtras} ${anosAtras === 1 ? "ano" : "anos"} atrás</p>
       <p class="temp">—</p>
-      <p class="data-cheia">sem dado na série para esta data</p>
+      <p class="data-cheia">${explicacao}</p>
     </article>`;
   }
 
@@ -305,21 +314,134 @@ function tendenciaPorDecada(dados, campo) {
   return inclin * 10;
 }
 
+/** Media de um campo nos primeiros e nos ultimos anos completos da serie. */
+function extremos(resumo, campo) {
+  const completos = resumo.filter((d) => d.dias >= 300);
+  if (completos.length < 6) return null;
+  const n = Math.min(10, Math.floor(completos.length / 2));
+  const med = (lista) => lista.reduce((s, d) => s + Number(d[campo]), 0) / lista.length;
+  const antes = completos.slice(0, n), depois = completos.slice(-n);
+  return {
+    antes: med(antes), depois: med(depois),
+    anoIni: antes[0].ano, anoFimIni: antes[n - 1].ano,
+    anoFin: depois[0].ano, anoFimFin: depois[n - 1].ano,
+  };
+}
+
+/** "p.p. por decada" nao chega no corpo de ninguem. A traducao vem primeiro. */
 function blocoTendencias(resumo) {
+  const dias = extremos(resumo, "dias_acima_30");
+  // "1,0 para 1,9 meses" e numero quebrado numa frase que pede arredondamento.
+  // Se os dois lados arredondarem igual, o mes perde a graca e voltamos a dias.
+  const m1 = dias ? Math.round(dias.antes / 30) : 0;
+  const m2 = dias ? Math.round(dias.depois / 30) : 0;
+  const emMeses = dias && m1 !== m2 && m1 >= 1;
+
   const itens = [
-    { campo: "temp_max_media", nome: "máxima", unidade: " °C", casas: 2 },
-    { campo: "temp_min_media", nome: "mínima (noites)", unidade: " °C", casas: 2 },
-    { campo: "dias_acima_30", nome: "dias acima de 30 °C", unidade: " dias", casas: 0 },
-    { campo: "umidade_media", nome: "umidade do ar", unidade: " p.p.", casas: 2 },
+    {
+      campo: "dias_acima_30", unidade: " dias", casas: 0, nome: "por década",
+      traducao: !dias ? "Dias acima de 30 °C"
+        : emMeses
+          ? `De ${m1} para ${m2} ${m2 === 1 ? "mês" : "meses"} de calor por ano`
+          : `De ${br(dias.antes, 0)} para ${br(dias.depois, 0)} dias de calor por ano`,
+    },
+    {
+      campo: "temp_max_media", unidade: " °C", casas: 2, nome: "na máxima, por década",
+      traducao: "Os dias esquentaram",
+    },
+    {
+      campo: "temp_min_media", unidade: " °C", casas: 2, nome: "na mínima, por década",
+      traducao: "As noites quase não mudaram",
+    },
+    {
+      campo: "umidade_media", unidade: " p.p.", casas: 2, nome: "de umidade, por década",
+      traducao: "O ar ficou mais seco",
+    },
   ];
+
   return itens.map((it) => {
     const v = tendenciaPorDecada(resumo, it.campo);
     const classe = v === null ? "parado" : v > 0.1 ? "sobe" : v < -0.1 ? "desce" : "parado";
+    // a frase das noites so vale enquanto o dado disser isso
+    const traducao = it.campo === "temp_min_media" && v !== null && Math.abs(v) >= 0.15
+      ? (v > 0 ? "As noites também esquentaram" : "As noites esfriaram um pouco")
+      : it.traducao;
     return `<div class="tend ${classe}">
+      <span class="traducao">${traducao}</span>
       <span class="valor">${comSinal(v, it.casas)}${it.unidade}</span>
-      <span class="nome">${it.nome}, por década</span>
+      <span class="nome">${it.nome}</span>
     </div>`;
   }).join("");
+}
+
+/** A manchete: o achado que da sentido a pagina inteira, antes de tudo. */
+function montarManchete(resumo) {
+  const d = extremos(resumo, "dias_acima_30");
+  if (!d || d.depois <= d.antes) return false;
+  $("#manchete-frase").innerHTML =
+    `Brasília tinha <b>${br(d.antes, 0)} dias de calor</b> por ano. Hoje tem <b>${br(d.depois, 0)}</b>.`;
+  $("#manchete-fonte").textContent =
+    `Dias acima de 30 °C: média de ${d.anoIni}–${d.anoFimIni} contra ${d.anoFin}–${d.anoFimFin}, estação A001 do INMET.`;
+  $("#manchete").hidden = false;
+  return true;
+}
+
+/** Media movel de janelaMedia anos em torno de um ano - um ano so e ruidoso. */
+function mediaEmTorno(resumo, ano, campo) {
+  const metade = Math.floor(CONFIG.janelaMedia / 2);
+  const perto = resumo.filter((d) => d.dias >= 300
+    && d.ano >= ano - metade && d.ano <= ano + metade);
+  if (!perto.length) return null;
+  return perto.reduce((s, d) => s + Number(d[campo]), 0) / perto.length;
+}
+
+/** O aluno escolhe o proprio ano: o que ele gera, ele lembra. */
+function ligarGeracao(resumo) {
+  const completos = resumo.filter((d) => d.dias >= 300);
+  if (completos.length < 6) return;
+
+  const primeiro = completos[0].ano, ultimo = completos[completos.length - 1].ano;
+  const campo = $("#ano-nascimento"), resposta = $("#geracao-resposta");
+  campo.min = primeiro;
+  campo.max = ultimo;
+  $("#geracao").hidden = false;
+
+  function responder() {
+    const ano = Number(campo.value);
+    resposta.hidden = false;
+
+    if (!ano || ano < primeiro || ano > ultimo) {
+      resposta.innerHTML = `A série da estação A001 vai de <strong>${primeiro}</strong> a
+        <strong>${ultimo}</strong>. Digite um ano desse intervalo.`;
+      return;
+    }
+
+    const entao = mediaEmTorno(resumo, ano, "dias_acima_30");
+    // "agora" sao os ultimos anos fechados, nao uma janela centrada no ultimo
+    // (que so teria metade dos anos e nao bateria com o rotulo do texto).
+    const recentes = completos.slice(-CONFIG.janelaMedia);
+    const agora = recentes.reduce((s, d) => s + Number(d.dias_acima_30), 0) / recentes.length;
+    if (entao === null) { resposta.hidden = true; return; }
+
+    // As duas pontas usam a mesma janela de anos, e o texto diz qual e. Sem
+    // isso a pagina parece se contradizer: a manchete compara decadas e daria
+    // um "hoje" diferente do daqui.
+    // arredonda antes de subtrair: senao a conta exibida (35 -> 63) nao fecha
+    // com a diferenca exibida, e e a primeira coisa que um aluno confere.
+    const metade = Math.floor(CONFIG.janelaMedia / 2);
+    const de = Math.round(entao), para = Math.round(agora);
+    const dif = para - de;
+    const verbo = dif >= 0 ? "ganhou" : "perdeu";
+    resposta.innerHTML = `Desde ${ano}, Brasília ${verbo}
+      <strong>${Math.abs(dif)} dias de calor por ano</strong>.
+      Por volta de ${ano} eram ${de} dias acima de 30 °C por ano; agora são ${para}.
+      <span class="miudo">Comparação entre ${ano - metade}–${ano + metade} e
+      ${recentes[0].ano}–${recentes[recentes.length - 1].ano}, para um ano atípico
+      não distorcer a conta.</span>`;
+  }
+
+  $("#geracao-botao").addEventListener("click", responder);
+  campo.addEventListener("keydown", (e) => { if (e.key === "Enter") responder(); });
 }
 
 /** O texto de leitura muda conforme o dado - nao e uma conclusao fixa no HTML. */
@@ -399,11 +521,13 @@ async function main() {
   // cartoes
   $("#cartao-hoje").innerHTML = selosDeRecorde(hoje, pontos) + cartaoHoje(hoje);
 
+  const serieCarregada = resumo.filter((d) => d.dias >= 300).length >= 6;
+
   let houveAproximacao = false;
   $("#cartoes-passado").innerHTML = CONFIG.anosAtras.map((n) => {
     const achado = escolherDia(linhas, iso(anoAtual - n, mes, dia));
     if (achado && achado.desvio !== 0) houveAproximacao = true;
-    return cartaoPassado(n, achado, hoje);
+    return cartaoPassado(n, achado, hoje, serieCarregada);
   }).join("");
 
   if (houveAproximacao) {
@@ -412,6 +536,10 @@ async function main() {
     nota.textContent = "Em algum dos anos a estação não registrou este dia exato. "
       + "Nesse caso usei o dia válido mais próximo, dentro de três dias, e avisei no cartão.";
   }
+
+  // a manchete e o campo do ano so aparecem quando ha serie que os sustente
+  montarManchete(resumo);
+  ligarGeracao(resumo);
 
   // graficos e tendencias
   $("#grafico-serie").innerHTML = graficoSerie(pontos, hoje);

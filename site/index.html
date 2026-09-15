@@ -17,6 +17,23 @@
 
 <main>
 
+  <!-- A manchete vem antes de tudo: e o achado que da sentido ao resto da pagina. -->
+  <section class="manchete" id="manchete" hidden>
+    <p class="manchete-frase" id="manchete-frase"></p>
+    <p class="manchete-fonte" id="manchete-fonte"></p>
+  </section>
+
+  <!-- O aluno escolhe algo antes de ler: o que ele mesmo gera, ele lembra. -->
+  <section class="bloco geracao" id="geracao" hidden>
+    <label class="geracao-rotulo" for="ano-nascimento">Em que ano você nasceu?</label>
+    <div class="geracao-campo">
+      <input type="number" id="ano-nascimento" inputmode="numeric"
+             min="1990" max="2026" step="1" placeholder="2009" autocomplete="off">
+      <button type="button" id="geracao-botao">Ver meu clima</button>
+    </div>
+    <p class="geracao-resposta" id="geracao-resposta" hidden></p>
+  </section>
+
   <section class="bloco" aria-labelledby="t-hoje">
     <h2 id="t-hoje" class="rotulo">Hoje</h2>
     <div id="cartao-hoje" class="cartao cartao-hoje">
