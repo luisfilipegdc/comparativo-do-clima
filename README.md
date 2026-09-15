@@ -37,7 +37,8 @@ ele chega até Brasília. O site diz isso com essas palavras, de propósito.
 
 ```
 importar_inmet.py     baixa os ZIPs do INMET, agrega por dia, gera o CSV
-carregar_supabase.py  sobe o CSV para o Supabase (upsert por data)
+gerar_json.py         transforma o CSV em site/dados/serie.json (o que o site lê)
+carregar_supabase.py  opcional: sobe o CSV para o Supabase, se quiser uma API
 supabase/migrations/  o schema, em ordem
 site/                 o site estático (é o que a Vercel publica)
 ```
@@ -51,21 +52,29 @@ python importar_inmet.py 2000 2026      # a série inteira (~2,4 GB de download)
 
 O resultado vai para `dados/clima_diario.csv`, que **não** é versionado.
 
-Para subir ao banco, copie `.env.exemplo` para `.env`, preencha a
-`SUPABASE_SERVICE_ROLE_KEY` e rode:
+Depois, gere o arquivo que o site consome:
 
 ```bash
-python carregar_supabase.py
+python gerar_json.py
 ```
 
-## Banco
+## Por que arquivo estático e não banco
 
-Os dados moram no schema `clima` (tabela `clima_diario` e view `resumo_anual`),
-separados das tabelas do site principal, que dividem o mesmo projeto Supabase.
-Duas views somente leitura em `public` servem de vitrine para a API REST.
+A série muda uma vez por ano e o site só lê. Servir isso de um banco custaria
+uma chamada de rede a cada visita e uma dependência viva para um site de aula.
+O `serie.json` tem 389 KB, viaja comprimido em ~97 KB, cai no CDN da Vercel e
+chega em uma requisição. Só o dia de hoje é buscado ao vivo, na Open-Meteo.
 
-RLS ligada: leitura pública, escrita apenas pelo *service role*. No front só
-entra a *publishable key* — ela lê o que a RLS permitir e não grava nada.
+## Banco (opcional)
+
+O schema `clima` existe no Supabase (tabela `clima_diario`, view `resumo_anual`),
+separado das tabelas do site principal, que dividem o mesmo projeto. Duas views
+somente leitura em `public` servem de vitrine para a API REST. RLS ligada:
+leitura pública, escrita apenas pelo *service role*.
+
+Isso **não** é usado pelo site — fica de pé para quem quiser consultar a série
+por API. Para popular, copie `.env.exemplo` para `.env`, preencha a
+`SUPABASE_SERVICE_ROLE_KEY` e rode `python carregar_supabase.py`.
 
 ## Atualizar a série
 
@@ -73,7 +82,7 @@ O INMET republica o ano corrente periodicamente. Para atualizar:
 
 ```bash
 rm dados/2026.zip
-python importar_inmet.py 2026 && python carregar_supabase.py
+python importar_inmet.py 2000 2026 && python gerar_json.py
 ```
 
-O upsert é por data, então rodar de novo não duplica nada.
+Depois é só commitar o `site/dados/serie.json` — a Vercel republica sozinha.

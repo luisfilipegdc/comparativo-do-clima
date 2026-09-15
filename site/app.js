@@ -4,8 +4,9 @@
    so enxerga o que a RLS libera. */
 
 const CONFIG = {
-  supabaseUrl: "https://frsidsdrexolvcfxzroe.supabase.co",
-  supabaseKey: "sb_publishable_xgr6ki59dLrTcdjDlmEtZA_LAF6m1BC",
+  // A serie historica muda uma vez por ano: e um arquivo, nao uma consulta.
+  // Publicado junto com o site, cai no CDN e chega em uma requisicao so.
+  serie: "dados/serie.json",
   lat: -15.78,
   lon: -47.93,
   fuso: "America/Sao_Paulo",
@@ -69,40 +70,36 @@ function comSinal(valor, casas = 1) {
 
 /* ------------------------------------------------------------------- dados */
 
-async function doSupabase(recurso, parametros) {
-  const url = `${CONFIG.supabaseUrl}/rest/v1/${recurso}?${parametros}`;
-  const resposta = await fetch(url, {
-    headers: {
-      apikey: CONFIG.supabaseKey,
-      Authorization: `Bearer ${CONFIG.supabaseKey}`,
-    },
+/** Baixa a serie inteira (uma vez) e devolve os dias como objetos. */
+async function buscarSerie() {
+  const resposta = await fetch(CONFIG.serie, { cache: "default" });
+  if (!resposta.ok) throw new Error(`Série histórica ${resposta.status}`);
+  const bruto = await resposta.json();
+  // as linhas vem como arrays para o arquivo nao repetir o nome do campo
+  // 9.558 vezes; aqui voltam a ser objetos, que e o que o resto do codigo usa.
+  const dias = bruto.dias.map((linha) => {
+    const d = {};
+    bruto.campos.forEach((campo, i) => { d[campo] = linha[i]; });
+    d.fonte = "inmet_a001";
+    return d;
   });
-  if (!resposta.ok) {
-    const texto = await resposta.text();
-    throw new Error(`Supabase ${resposta.status}: ${texto}`);
-  }
-  return resposta.json();
+  return { dias, resumo: bruto.resumo };
 }
 
-/** Todos os dias da serie que caem na janela em torno deste dia do ano. */
-async function buscarMesmoDia(hoje) {
+/** Os dias da serie na janela em torno deste dia do ano, em todos os anos. */
+function mesmoDia(dias, hoje) {
   const [, mes, dia] = hoje.split("-").map(Number);
   const anoAtual = Number(hoje.slice(0, 4));
-  const datas = [];
+  const alvos = new Set();
   for (let ano = CONFIG.anoInicial; ano <= anoAtual; ano++) {
     // conta a partir do dia 1 do mes: um 29/02 em ano comum vira 01/03
-    // em vez de virar uma data invalida que o banco ignoraria.
+    // em vez de virar uma data que nao existe na serie.
     const alvo = somarDias(iso(ano, mes, 1), dia - 1);
     for (let desvio = -CONFIG.janela; desvio <= CONFIG.janela; desvio++) {
-      datas.push(somarDias(alvo, desvio));
+      alvos.add(somarDias(alvo, desvio));
     }
   }
-  const lista = [...new Set(datas)].join(",");
-  return doSupabase("clima_diario", `select=*&data=in.(${lista})&order=data.asc`);
-}
-
-async function buscarResumoAnual() {
-  return doSupabase("resumo_anual", "select=*&order=ano.asc");
+  return dias.filter((d) => alvos.has(d.data));
 }
 
 /** Hoje vem da Open-Meteo: o INMET publica o ano corrente com semanas de atraso. */
@@ -499,9 +496,10 @@ async function main() {
 
   let hoje, linhas, resumo;
   try {
-    [hoje, linhas, resumo] = await Promise.all([
-      buscarHoje(), buscarMesmoDia(hojeISO), buscarResumoAnual(),
-    ]);
+    const [agora, serie] = await Promise.all([buscarHoje(), buscarSerie()]);
+    hoje = agora;
+    linhas = mesmoDia(serie.dias, hojeISO);
+    resumo = serie.resumo;
   } catch (erro) {
     $("#cartao-hoje").innerHTML =
       `<div class="erro"><strong>Não consegui carregar os dados.</strong><br>${erro.message}</div>`;
