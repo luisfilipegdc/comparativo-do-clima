@@ -185,8 +185,10 @@ function cartaoPassado(anosAtras, achado, hoje, serieCarregada) {
     ? hoje.umidade_media - num(l.umidade_media) : null;
 
   const classe = difMax === null ? "igual" : difMax > 0.05 ? "sobe" : difMax < -0.05 ? "desce" : "igual";
+  // a palavra "quente"/"frio" ja diz a direcao; o sinal so aparecia num dos
+  // lados e parecia erro de digitacao
   const texto = difMax === null ? ""
-    : difMax > 0.05 ? `hoje está ${comSinal(difMax)} °C mais quente`
+    : difMax > 0.05 ? `hoje está ${br(difMax)} °C mais quente`
     : difMax < -0.05 ? `hoje está ${br(Math.abs(difMax))} °C mais frio`
     : "praticamente igual a hoje";
 
