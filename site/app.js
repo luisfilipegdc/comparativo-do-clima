@@ -423,11 +423,15 @@ function montarManchete(resumo) {
 
 /** Os dias de calor de cada ano de vida da crianca, rotulados pela IDADE.
     "Quando voce tinha 3 anos" diz mais a um aluno de 10 que "2019". */
-function graficoIdade(resumo, anoNascimento) {
-  const anos = resumo.filter((d) => d.dias >= 300 && d.ano >= anoNascimento);
+function graficoIdade(resumo, anoNascimento, minimoDias = 300) {
+  const anos = resumo.filter((d) => d.dias >= minimoDias && d.ano >= anoNascimento);
   if (anos.length < 3) return "";
 
-  const larguraBarra = 22, espaco = 8, alturaUtil = 120, margemBaixo = 34, margemEsq = 26;
+  // Quem nasceu em 1980 tem 46 barras: afina a barra e rotula de 5 em 5, senao
+  // os numeros viram uma mancha preta e o grafico deixa de ser legivel.
+  const denso = anos.length > 24;
+  const larguraBarra = denso ? 11 : 22, espaco = denso ? 4 : 8;
+  const alturaUtil = 120, margemBaixo = 34, margemEsq = 26;
   const largura = margemEsq + anos.length * (larguraBarra + espaco) + 8;
   const altura = alturaUtil + margemBaixo + 12;
 
@@ -440,10 +444,17 @@ function graficoIdade(resumo, anoNascimento) {
     const x = margemEsq + i * (larguraBarra + espaco);
     const y = escala(a.dias_acima_30);
     const classe = a.dias_acima_30 >= maximo * 0.8 ? "g-barra-quente" : "g-barra";
+    // no modo denso so a cada 5 anos de vida, mais o primeiro e o ultimo
+    const rotular = !denso || idade % 5 === 0 || i === 0 || i === anos.length - 1;
+    const numero = rotular
+      ? `<text class="g-rotulo g-numero" x="${x + larguraBarra / 2}" y="${y - 4}" text-anchor="middle">${a.dias_acima_30}</text>`
+      : "";
+    const eixo = rotular
+      ? `<text class="g-rotulo" x="${x + larguraBarra / 2}" y="${alturaUtil + 26}" text-anchor="middle">${idade === 0 ? "nasceu" : idade}</text>`
+      : "";
     return `<rect class="${classe}" x="${x}" y="${y}" width="${larguraBarra}"
         height="${alturaUtil + 10 - y}" rx="3"><title>${a.ano}: ${a.dias_acima_30} dias</title></rect>
-      <text class="g-rotulo g-numero" x="${x + larguraBarra / 2}" y="${y - 4}" text-anchor="middle">${a.dias_acima_30}</text>
-      <text class="g-rotulo" x="${x + larguraBarra / 2}" y="${alturaUtil + 26}" text-anchor="middle">${idade === 0 ? "nasceu" : idade}</text>`;
+      ${numero}${eixo}`;
   }).join("");
 
   return `<div class="grafico grafico-idade">
@@ -455,20 +466,34 @@ function graficoIdade(resumo, anoNascimento) {
 }
 
 /** Media movel de janelaMedia anos em torno de um ano - um ano so e ruidoso. */
-function mediaEmTorno(resumo, ano, campo) {
+function mediaEmTorno(resumo, ano, campo, minimoDias = 300) {
   const metade = Math.floor(CONFIG.janelaMedia / 2);
-  const perto = resumo.filter((d) => d.dias >= 300
+  const perto = resumo.filter((d) => d.dias >= minimoDias
     && d.ano >= ano - metade && d.ano <= ano + metade);
   if (!perto.length) return null;
   return perto.reduce((s, d) => s + Number(d[campo]), 0) / perto.length;
 }
 
-/** O aluno escolhe o proprio ano: o que ele gera, ele lembra. */
-function ligarGeracao(resumo) {
+/** O aluno escolhe o proprio ano: o que ele gera, ele lembra.
+ *
+ * A estacao A001 so existe desde 2000, mas professor e pai nasceram antes. Para
+ * esses anos a pagina cai no ERA5, que cobre 1940 em diante — e entao compara
+ * ERA5 com ERA5. O que nao pode e um lado vir do termometro e o outro do modelo:
+ * o ERA5 enxerga a regiao numa grade de ~30 km e marca menos dias de calor que a
+ * estacao dentro da cidade, entao a diferenca seria invencao da mistura.
+ */
+function ligarGeracao(resumo, era5) {
+  const anosEra5 = (era5?.resumo || []).filter((d) => d.dias >= 350);
   const completos = resumo.filter((d) => d.dias >= 300);
   if (completos.length < 6) return;
 
-  const primeiro = completos[0].ano, ultimo = completos[completos.length - 1].ano;
+  const metade = Math.floor(CONFIG.janelaMedia / 2);
+  // so vale abrir a estacao a partir do ano em que a janela de media cabe inteira
+  const primeiroInmet = completos[0].ano + metade;
+  const primeiroEra5 = anosEra5.length >= 10 ? anosEra5[0].ano + metade : null;
+  const primeiro = primeiroEra5 ?? primeiroInmet;
+  const ultimo = completos[completos.length - 1].ano;
+
   const campo = $("#ano-nascimento"), resposta = $("#geracao-resposta");
   campo.min = primeiro;
   campo.max = ultimo;
@@ -479,24 +504,30 @@ function ligarGeracao(resumo) {
     resposta.hidden = false;
 
     if (!ano || ano < primeiro || ano > ultimo) {
-      resposta.innerHTML = `A série da estação A001 vai de <strong>${primeiro}</strong> a
+      resposta.innerHTML = `Os dados vão de <strong>${primeiro}</strong> a
         <strong>${ultimo}</strong>. Digite um ano desse intervalo.`;
       return;
     }
 
-    const entao = mediaEmTorno(resumo, ano, "dias_acima_30");
+    // Antes de 2000 nao havia estacao: o ano decide a fonte, e a fonte vale
+    // para os dois lados da conta.
+    const usaEra5 = ano < primeiroInmet;
+    const serie = usaEra5 ? anosEra5 : completos;
+    const minimoDias = usaEra5 ? 350 : 300;
+
+    const entao = mediaEmTorno(serie, ano, "dias_acima_30", minimoDias);
+    if (entao === null) { resposta.hidden = true; return; }
+
     // "agora" sao os ultimos anos fechados, nao uma janela centrada no ultimo
     // (que so teria metade dos anos e nao bateria com o rotulo do texto).
-    const recentes = completos.slice(-CONFIG.janelaMedia);
+    const recentes = serie.slice(-CONFIG.janelaMedia);
     const agora = recentes.reduce((s, d) => s + Number(d.dias_acima_30), 0) / recentes.length;
-    if (entao === null) { resposta.hidden = true; return; }
 
     // As duas pontas usam a mesma janela de anos, e o texto diz qual e. Sem
     // isso a pagina parece se contradizer: a manchete compara decadas e daria
     // um "hoje" diferente do daqui.
     // arredonda antes de subtrair: senao a conta exibida (35 -> 63) nao fecha
     // com a diferenca exibida, e e a primeira coisa que um aluno confere.
-    const metade = Math.floor(CONFIG.janelaMedia / 2);
     const de = Math.round(entao), para = Math.round(agora);
     const dif = para - de;
     // a idade conta do ano corrente, nao do ultimo ano com dado fechado:
@@ -512,12 +543,22 @@ function ligarGeracao(resumo) {
       : `Você tem cerca de <strong>${idade} anos</strong>. Quando você nasceu, Brasília
          tinha <strong>${de} dias de calor</strong> por ano. Hoje tem <strong>${para}</strong>.`;
 
+    // a origem do numero fica colada nele, nao escondida no rodape
+    const fonte = usaEra5
+      ? `<span class="miudo">Você nasceu antes de a estação A001 existir: estes números
+         vêm do <strong>ERA5</strong>, a reconstrução do clima desta região desde 1940.
+         Os dois lados da conta vêm dele, nunca um do modelo e outro do termômetro. O
+         ERA5 mede a região inteira numa grade de ~30 km, por isso conta menos dias de
+         calor que a estação dentro da cidade — o que importa aqui é o quanto mudou.</span>`
+      : `<span class="miudo">Números da estação automática A001, do INMET.</span>`;
+
     resposta.innerHTML = frase
-      + graficoIdade(resumo, ano)
+      + graficoIdade(serie, ano, minimoDias)
       + `<span class="miudo">Cada barra é um ano da sua vida, e o número em cima é
          quantos dias passaram de 30 °C. A conta compara ${ano - metade}–${ano + metade}
          com ${recentes[0].ano}–${recentes[recentes.length - 1].ano}, para um ano
-         fora do normal não entortar o resultado.</span>`;
+         fora do normal não entortar o resultado.</span>`
+      + fonte;
   }
 
   $("#geracao-botao").addEventListener("click", responder);
@@ -809,9 +850,19 @@ async function main() {
       + "Nesse caso usei o dia válido mais próximo, dentro de três dias, e avisei no cartão.";
   }
 
+  // O ERA5 vem antes do campo do ano porque quem nasceu antes de 2000 depende
+  // dele para ter resposta. Sao 8 KB; se falhar, o campo abre so com a estacao.
+  let era5 = null;
+  try {
+    const resposta = await fetch(CONFIG.era5);
+    if (resposta.ok) era5 = await resposta.json();
+  } catch (erro) {
+    console.warn("faixa ERA5 indisponível:", erro.message);
+  }
+
   // a manchete e o campo do ano so aparecem quando ha serie que os sustente
   montarManchete(resumo);
-  ligarGeracao(resumo);
+  ligarGeracao(resumo, era5);
 
   // graficos e tendencias
   $("#grafico-serie").innerHTML = graficoSerie(pontos, hoje);
@@ -830,12 +881,7 @@ async function main() {
     console.warn("normais indisponíveis:", erro.message);
   }
 
-  try {
-    const resposta = await fetch(CONFIG.era5);
-    if (resposta.ok) montarSeculo(await resposta.json(), resumo);
-  } catch (erro) {
-    console.warn("faixa ERA5 indisponível:", erro.message);
-  }
+  if (era5) montarSeculo(era5, resumo);
 }
 
 main();
