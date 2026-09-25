@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clima de Brasília — folha de resumo para imprimir</title>
+<meta name="description" content="Resumo em uma folha A4, com QR code, do que a série do INMET mostra sobre o clima de Brasília desde 2000.">
+<style>
+/* ====================================================================
+   Folha A4 para imprimir e entregar na mão. Tudo inline e sem depender
+   de estilo.css: esta pagina tem que sair igual em qualquer impressora,
+   inclusive fotocopiada em preto e branco. Uma pagina, sem sangria.
+   ==================================================================== */
+@page { size: A4; margin: 14mm 15mm; }
+
+:root {
+  --marca:  #0b4da2;
+  --calor:  #d40f1f;
+  --seco:   #b57400;
+  --tinta:  #12203a;
+  --fraca:  #55657f;
+  --linha:  #c9d7e6;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0 auto;
+  /* na tela, simula a folha; na impressao, @page manda */
+  width: 210mm;
+  min-height: 297mm;
+  padding: 14mm 15mm;
+  background: #fff;
+  color: var(--tinta);
+  font: 10.5pt/1.42 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+h1, h2, h3 { margin: 0; line-height: 1.15; }
+
+/* ---- cabecalho ---------------------------------------------------- */
+.topo {
+  display: flex;
+  gap: 8mm;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 2.5pt solid var(--marca);
+  padding-bottom: 3mm;
+}
+.olho {
+  margin: 0 0 1.5mm;
+  font-size: 8pt;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--marca);
+}
+h1 { font-size: 21pt; letter-spacing: -.01em; }
+.linha-fina { margin: 1.5mm 0 0; font-size: 9.5pt; color: var(--fraca); }
+
+/* ---- QR ----------------------------------------------------------- */
+.qr {
+  flex: 0 0 auto;
+  width: 38mm;
+  text-align: center;
+}
+.qr img { display: block; width: 38mm; height: 38mm; }
+.qr .chamada {
+  margin: 1.2mm 0 0;
+  font-size: 7.5pt;
+  font-weight: 700;
+  color: var(--marca);
+  line-height: 1.25;
+}
+/* a URL cabe inteira na largura do QR: quebrar no meio da palavra confunde */
+.qr .url { margin: .6mm 0 0; font-size: 6.4pt; color: var(--fraca); white-space: nowrap; }
+
+/* ---- manchete ----------------------------------------------------- */
+.manchete {
+  margin: 5mm 0 0;
+  padding: 4mm 5mm;
+  border-left: 3pt solid var(--calor);
+  background: #fdf1ef;
+}
+.manchete p { margin: 0; font-size: 13pt; line-height: 1.3; }
+.manchete strong { color: var(--calor); }
+.manchete .fonte { margin: 1.5mm 0 0; font-size: 8pt; color: var(--fraca); }
+
+/* ---- numeros ------------------------------------------------------ */
+h2.secao {
+  margin: 6mm 0 2.5mm;
+  font-size: 8pt;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--marca);
+}
+.numeros {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3.5mm;
+}
+.cartao {
+  border: .8pt solid var(--linha);
+  border-top: 2.5pt solid var(--marca);
+  padding: 3mm 3.5mm 3.5mm;
+}
+.cartao .valor { display: block; font-size: 17pt; font-weight: 700; letter-spacing: -.02em; }
+.cartao .rotulo { display: block; margin-top: .8mm; font-size: 9pt; font-weight: 600; }
+.cartao .nota { display: block; margin-top: 1.5mm; font-size: 8pt; color: var(--fraca); line-height: 1.32; }
+.cartao.quente { border-top-color: var(--calor); }
+.cartao.quente .valor { color: var(--calor); }
+.cartao.seco { border-top-color: var(--seco); }
+.cartao.seco .valor { color: var(--seco); }
+
+/* ---- texto corrido em duas colunas -------------------------------- */
+.duas { column-count: 2; column-gap: 7mm; }
+.duas p { margin: 0 0 2.5mm; text-align: justify; }
+.duas p:last-child { margin-bottom: 0; }
+
+/* ---- caixa da honestidade ----------------------------------------- */
+.honesta {
+  margin: 5mm 0 0;
+  padding: 3.5mm 4mm;
+  border: .8pt dashed var(--fraca);
+  background: #f7fbff;
+  font-size: 9.5pt;
+}
+.honesta h3 { font-size: 9.5pt; margin-bottom: 1.5mm; }
+.honesta ul { margin: 0; padding-left: 5mm; }
+.honesta li { margin-bottom: 1.2mm; }
+.honesta li:last-child { margin-bottom: 0; }
+
+/* ---- rodape ------------------------------------------------------- */
+footer {
+  margin-top: 6mm;
+  padding-top: 2.5mm;
+  border-top: .8pt solid var(--linha);
+  font-size: 7.8pt;
+  color: var(--fraca);
+}
+footer p { margin: 0 0 1mm; }
+footer p:last-child { margin-bottom: 0; }
+
+/* na tela dá para ver a folha; no papel isso desaparece */
+@media screen {
+  body { box-shadow: 0 2px 30px rgba(11, 77, 162, .22); margin: 10mm auto; }
+  html { background: #eef4fa; }
+}
+@media print {
+  body { width: auto; min-height: 0; padding: 0; box-shadow: none; margin: 0; }
+}
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div>
+    <p class="olho">Estação A001 · Brasília · série de 2000 a 2025</p>
+    <h1>O clima de Brasília<br>mudou em 25 anos?</h1>
+    <p class="linha-fina">Um site que compara a temperatura de <strong>hoje</strong> com o
+      <strong>mesmo dia</strong> há 1, 5, 10 e 20 anos — com o dado bruto do INMET.</p>
+  </div>
+
+  <div class="qr">
+    <img src="qr.svg" alt="QR code para comparativo-do-clima.vercel.app">
+    <p class="chamada">Aponte a câmera<br>e veja o dia de hoje</p>
+    <p class="url">comparativo-do-clima.vercel.app</p>
+  </div>
+</header>
+
+<section class="manchete">
+  <p>Os dias acima de 30 °C em Brasília <strong>dobraram</strong>: eram
+     <strong>29 por ano</strong> na década de 2000 e são <strong>57 por ano</strong>
+     na última década.</p>
+  <p class="fonte">Estação automática A001 do INMET, anos completos de 2001 a 2025.</p>
+</section>
+
+<h2 class="secao">Três números da série</h2>
+<div class="numeros">
+  <div class="cartao quente">
+    <span class="valor">+20,7</span>
+    <span class="rotulo">dias acima de 30 °C, por década</span>
+    <span class="nota">± 4,3 dias · p &lt; 0,001. É o número mais direto: não é média em décimos de grau, é contagem de dias de calor.</span>
+  </div>
+  <div class="cartao quente">
+    <span class="valor">+0,52 °C</span>
+    <span class="rotulo">na temperatura máxima, por década</span>
+    <span class="nota">± 0,11 °C · p &lt; 0,001. Meio grau a cada dez anos na máxima do dia.</span>
+  </div>
+  <div class="cartao seco">
+    <span class="valor">−3,3 p.p.</span>
+    <span class="rotulo">de umidade entre duas normais</span>
+    <span class="nota">Normais do INMET (estação 83377): 67,6% em 1961–1990 contra 64,3% em 1991–2020, com queda em 11 dos 12 meses.</span>
+  </div>
+</div>
+
+<h2 class="secao">A cidade esquenta mais rápido que a região</h2>
+<div class="duas">
+  <p>No mesmo período de 2001 a 2025, a reconstrução <strong>ERA5</strong> mede
+     <strong>+0,27 °C por década</strong> para a área em volta de Brasília, contra
+     <strong>+0,52 °C</strong> da estação que fica dentro da cidade. O termômetro
+     urbano aquece cerca de <strong>1,9 vez mais rápido</strong>. Os dois lados usam
+     sempre os mesmos anos — comparar 25 anos de cidade com 86 de região exageraria
+     a diferença.</p>
+  <p>Olhando muito mais para trás, o ERA5 cobre este ponto do mapa desde
+     <strong>1940</strong>: a temperatura máxima média subiu <strong>+1,0 °C</strong>
+     de 1940–1969 para 2016–2025, a <strong>+0,131 °C por década</strong>
+     (p &lt; 0,000001). Uma estação sozinha não prova o efeito estufa, e parte do
+     que ela mede é o crescimento da cidade em volta dela.</p>
+</div>
+
+<div class="honesta">
+  <h3>O que o dado <em>não</em> permite afirmar</h3>
+  <ul>
+    <li><strong>As noites não esquentaram de forma comprovada.</strong> A mínima
+      varia −0,08 ± 0,07 °C por década, com p = 0,26: não passa no teste
+      estatístico.</li>
+    <li><strong>A umidade da nossa série também não.</strong> −0,67 ± 0,66 p.p.
+      por década, p = 0,31. A queda aparece nas normais de 30 anos do INMET, não
+      nestes 25 anos de estação automática.</li>
+    <li><strong>São leituras brutas.</strong> Troca de sensor, manutenção ou
+      mudança no entorno da estação não foram corrigidas — não há metadados
+      públicos para isso. E 25 anos é pouco tempo para clima.</li>
+  </ul>
+</div>
+
+<footer>
+  <p><strong>Fontes:</strong> INMET — estação automática A001, via Portal Brasileiro de
+     Dados Abertos · Open-Meteo (o dia de hoje) · ERA5/Copernicus via Open-Meteo Archive
+     (o contexto desde 1940) · Normais Climatológicas do INMET, estação 83377.</p>
+  <p><strong>Método:</strong> regressão linear sobre médias anuais de anos completos;
+     hora UTC convertida para UTC−3 antes de agregar o dia; leituras −9999 descartadas;
+     margens de erro a 95%. O código e os dados estão abertos em
+     github.com/luisfilipegdc/comparativo-do-clima.</p>
+</footer>
+
+</body>
+</html>
