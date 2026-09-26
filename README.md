@@ -71,6 +71,21 @@ gerar_era5.py         baixa o ERA5 (1940 →) e gera site/dados/era5.json
 carregar_supabase.py  opcional: sobe o CSV para o Supabase, se quiser uma API
 supabase/migrations/  o schema, em ordem
 site/                 o site estático (é o que a Vercel publica)
+site/folha.html       resumo em uma folha A4 para imprimir, com o QR do site
+gerar_qr.py           gera site/qr.svg a partir da URL publicada
+```
+
+## Folha para imprimir
+
+`site/folha.html` é um resumo de uma página, em A4, com os números da série e um
+QR code para o site. Abra e mande imprimir (Ctrl+P, sem margens extras, escala
+100%) — o CSS já traz `@page A4` e sai igual em preto e branco.
+
+O QR aponta para a URL publicada e vive em `site/qr.svg`. Se o endereço mudar:
+
+```bash
+pip install segno
+python gerar_qr.py https://novo-endereco.exemplo/
 ```
 
 ## Rodar a importação
